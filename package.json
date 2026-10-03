@@ -1,6 +1,6 @@
 {
   "name": "sakura-token-garden",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Claude Code ve Codex token harcadıkça yavaşça büyüyen ağaçlar: Claude için Sakura, Codex için Momiji. Masaüstü uygulaması + tarayıcı sürümü.",
   "private": true,
   "license": "MIT",
@@ -9,7 +9,7 @@
     "sakura-garden": "server.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.5"
   },
   "scripts": {
     "app": "electron .",
@@ -20,7 +20,7 @@
     "demo": "node server.js --demo --open --port 4880",
     "icons": "electron desktop/make-icons.js",
     "dist": "electron-builder --win",
-    "test": "node --test test/parsers.test.js test/garden.test.js test/tracker.test.js"
+    "test": "node --test test/parsers.test.js test/garden.test.js test/db.test.js test/tracker.test.js test/vscode-extension.test.js test/server.test.js"
   },
   "devDependencies": {
     "electron": "^44.5.1",

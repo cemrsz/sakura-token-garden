@@ -118,3 +118,33 @@ Kaynak koddan: `npm install` → `npm run app`. Kurulum dosyasını yeniden üre
 - Transcript formatları resmî bir API değil; Claude Code veya Codex formatı değişirse çözümleyici güncellenmeli (testler bunu hemen yakalar).
 - Otomatik güncelleme yok; yeni sürüm için `npm run dist` ile yeniden paketlenmeli.
 - Kod imzalama sertifikası eklenirse SmartScreen uyarısı kalkar.
+
+---
+
+## 8. Güncelleme — veritabanı, VS Code ağacı ve Bahçem
+
+### 8.1 Günlük / haftalık kayıt (bilgisayardaki veritabanı)
+- Node ve Electron'un **yerleşik SQLite**'ı kullanıldı (ek paket / derleme yok). Dosya: `%APPDATA%\sakura-token-garden\data\sakura.db`.
+- Her model çağrısı tekil bir kimlikle saklanıyor; transcriptler tekrar okunsa da hiçbir şey iki kez sayılmıyor.
+- İlk açılışta bütün geçmiş içe aktarılıyor: bu bilgisayarda **274 dosya / 12.049 kayıt ~4 saniyede** aktarıldı; geçmiş Codex için 25 Nisan, Claude Code için 20 Haziran 2026'ya uzanıyor. Uygulama kapalı kaldığı günler bir sonraki açılışta tamamlanıyor.
+- **İstatistikler** ekranı: bugün / dün / bu hafta / geçen hafta / son 30 gün; 30 günlük ve 12 haftalık yığılmış çubuk grafik; token ↔ kod satırı; grafik ↔ tablo; CSV indirme. Değerler daha önce bağımsız sayılanlarla birebir tuttu (ör. 1 Ekim 3,28M + 0,49M).
+- Grafik renkleri renk körlüğü dahil doğrulandı (Claude #cf4f8c, Codex #e39a2f, VS Code #6a5fd1).
+
+### 8.2 VS Code → 🪻 Fuji (elle yazılan satırlar)
+- `vscode-extension/` içinde bir VS Code eklentisi yazıldı, paketlendi (`.vsix`) ve VS Code'una **kuruldu** (`cemrsz.sakura-code-garden`).
+- Bir satır yalnızca o satırda gerçekten tuşa basılarak yazılıp Enter ile bitirildiyse sayılıyor; yapıştırma, AI tamamlama, snippet, biçimlendirme, geri al ve boş satırlar sayılmıyor. Sahte VS Code ortamında test edildi: 2 elle yazılmış satır sayıldı, diğer senaryoların hiçbiri sayılmadı.
+- Hedefler 50 / 100 / 250 / 1000 / 5000 satır (varsayılan 250). Fuji'nin çiçekleri dala göre değil yerçekimiyle aşağı sarkan salkımlar.
+
+### 8.3 🌳 Bahçem
+- Ağaç %100'e ulaşınca panelde **“Bahçeye dik”** düğmesi çıkıyor; dikilen ağaç bahçeye geçiyor, aktif ağaç fazlasını devralarak yeniden başlıyor (API ile doğrulandı: %224 → %124 → %24).
+- Dikilmeyen tamamlanmış ağaçlar sezon sonunda kendiliğinden dikiliyor (gerçek veriyle doğrulandı: dünkü 2,09M token, 1M hedefle 2 Sakura olarak dikildi). Bahçe özelliğinden önceki tamamlanmış sezonların da bir kerelik bahçeye taşınıyor.
+- Bahçe ekranı perspektifli bir çayır; her ağaç kendi tohumuyla farklı şekilde büyüyor; liste görünümü var.
+
+### 8.4 Doğrulama
+| Kontrol | Sonuç |
+|---|---|
+| `npm test` | ✅ 25/25 (veritabanı, istatistik, VS Code eklentisi, hasat, otomatik dikim, geçmiş aktarımı dahil) |
+| Yeni ekranların görsel kontrolü (Fuji, üç ağaçlı bahçe, İstatistikler, Bahçem) | ✅ |
+| Uç noktalar: `/api/stats`, `/api/stats.csv`, `/api/garden`, `/api/garden/plant` | ✅ |
+
+**Doğrulayamadığım:** VS Code'da gerçekten klavyeyle yazarak uçtan uca sayımı (VS Code'a yazı yazma iznim yok). Mantık sahte ortamda, okuma tarafı gerçek dosyalarla test edildi; VS Code penceresini yeniden yükledikten sonra durum çubuğunda `🪻` sayacını görmelisin.

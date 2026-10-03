@@ -1,126 +1,142 @@
 # 🌸 Sakura Token Bahçesi
 
-Yapay zekâ ajanların token harcadıkça yavaşça büyüyen ağaçlar. Her AI kendi ağaç türünü büyütür:
+Yapay zekâ ajanların token harcadıkça ve sen VS Code'da kod yazdıkça yavaşça büyüyen ağaçlar.
+Her kaynak kendi ağaç türünü büyütür:
 
-| AI | Ağaç | Final |
-|---|---|---|
-| **Claude Code** | 🌸 **Sakura** — Japon kiraz çiçeği; pembe tomurcuklar, çiçek bulutu | *Hanami* |
-| **Codex** | 🍁 **Momiji** — Japon akçaağacı; yapraklar sararır, turuncuya ve kızıla döner | *Momijigari* |
+| Kaynak | Ağaç | Neyle büyür | Final |
+|---|---|---|---|
+| **Claude Code** | 🌸 **Sakura** — kiraz çiçeği | token | *Hanami* |
+| **Codex** | 🍁 **Momiji** — Japon akçaağacı | token | *Momijigari* |
+| **VS Code** | 🪻 **Fuji** — morsalkım | elle yazılan kod satırı | *Fujimatsuri* |
 
-Tohumdan başlar, filizlenir, dallanır, yapraklanır ve hedefe ulaşınca tam çiçeğe / tam sonbahara durur.
-Hangi AI'ı kullanıyorsan onun ağacı büyür; ikisini birden kullanırsan bahçede yan yana iki ağaç olur.
-Harcanan her token, ağaca uçan küçük bir ışık tanesi olarak görünür.
+Tohumdan başlar, filizlenir, dallanır, yapraklanır ve hedefe ulaşınca tam çiçeğe durur.
+Tamamlanan ağacı **Bahçem**'e dikersin; yerine yeni bir tohum büyümeye başlar.
+Token ve satır geçmişin bilgisayarındaki bir veritabanında **günlük ve haftalık** tutulur.
 
-Hiçbir ayar, API anahtarı ya da hook gerekmez: uygulama ajanların zaten diske yazdığı transcript dosyalarını okur.
+Hiçbir API anahtarı ya da hook gerekmez: uygulama ajanların diske yazdığı transcriptleri ve VS Code eklentisinin
+yerel kayıtlarını okur. Hiçbir veri bilgisayarından çıkmaz.
 
-## Masaüstü uygulaması (önerilen)
+## Kurulum
 
-**Kurulum dosyası:** `dist/SakuraTokenBahcesi-Kurulum-1.0.0.exe` — çift tıkla, kur, Başlat menüsünden aç.
-Kurulumsuz denemek için: `dist/SakuraTokenBahcesi-1.0.0-portable.exe`.
+### Masaüstü uygulaması (önerilen)
 
-- **Ana pencere:** bahçe, evreler, istatistikler, ayarlar. Kapatınca sistem tepsisine küçülür; ağaç büyümeye devam eder.
-- **Widget:** çerçevesiz, her zaman üstte duran küçük pencere. Sürükleyerek taşınır, kenarından boyutlanır, konumu hatırlanır. Ana penceredeki ▣ düğmesi ya da tepsi menüsüyle açılır.
-- **Sistem tepsisi (🌸):** Bahçeyi aç · Widget · Widget her zaman üstte · Windows açılışında başlat · Çıkış. Fare üstüne gelince ağaçların yüzdesi görünür.
-- **Görev çubuğu:** uygulama simgesinde odaktaki ağacın ilerleme çubuğu.
-- **Bildirim:** bir ağaç finale (Hanami / Momijigari) ulaştığında Windows bildirimi.
+`dist/SakuraTokenBahcesi-Kurulum-1.1.0.exe` — çift tıkla, kur, Başlat menüsünden aç.
+Kurulumsuz: `dist/SakuraTokenBahcesi-1.1.0-portable.exe`. (GitHub'da *Releases* sayfasında da var.)
 
-Kaynak koddan çalıştırmak için:
+- **Ana pencere:** bahçe, evreler, istatistikler, ayarlar. Kapatınca sistem tepsisine küçülür.
+- **Widget:** çerçevesiz, her zaman üstte duran küçük pencere; sürükle, boyutlandır, konumu hatırlanır.
+- **Sistem tepsisi (🌸):** Bahçeyi aç · Widget · Her zaman üstte · Windows açılışında başlat · Çıkış.
+- **Görev çubuğu** ilerleme çubuğu ve hedefe ulaşınca **Windows bildirimi**.
+
+### VS Code eklentisi (kod satırları için)
 
 ```bash
-npm install
-npm run app
+code --install-extension vscode-extension/sakura-code-garden-1.0.0.vsix
 ```
 
-Kurulum dosyasını yeniden üretmek için: `npm run dist` (çıktı `dist/` klasörüne).
+Kurduktan sonra VS Code penceresini yeniden yükle (*Developer: Reload Window*). Durum çubuğunda `🪻 N satır` görünür.
 
-## Tarayıcı sürümü
+**Sayılan:** o satırda gerçekten tuşa basarak yazıp Enter ile bitirdiğin satırlar.
+**Sayılmayan:** yapıştırma, Copilot/AI tamamlama ve düzenlemeleri, snippet'ler, otomatik biçimlendirme, geri al / yinele, boş satırlar.
+Uygulama kapalıyken de sayar; açınca okunur. Cursor için: `cursor --install-extension …vsix`.
 
-Node.js 18+ yeterli, paket kurulumu gerekmez.
+### Tarayıcı sürümü
+
+Node.js 22.5+ yeterli (veritabanı için yerleşik SQLite), paket kurulumu gerekmez.
 
 | Dosya | Ne yapar |
 |---|---|
-| `Sakura.cmd` | Sunucuyu başlatır, tarayıcıda bahçeyi açar |
+| `Sakura.cmd` | Sunucuyu başlatır, tarayıcıda açar |
 | `Sakura-Widget.cmd` | Edge/Chrome'u küçük uygulama penceresi olarak açar |
-| `Sakura-Arkaplan.vbs` | Konsol penceresi olmadan başlatır + widget açar |
+| `Sakura-Uygulama.cmd` | Masaüstü uygulamasını kaynak koddan açar |
+| `Sakura-Arkaplan.vbs` | Konsolsuz başlatır + widget |
 | `Sakura-Demo.cmd` | Sahte token akışıyla demo |
 
-Adres: <http://127.0.0.1:4870> · Widget: <http://127.0.0.1:4870/?mode=widget>
-Tarayıcıda **Üstte tut** düğmesi bahçeyi Chrome/Edge Picture‑in‑Picture penceresine taşır.
+## Bahçem
+
+Bir ağaç hedefe ulaşınca panelde **“Bahçeye dik”** düğmesi çıkar. Dikince ağaç Bahçem'e geçer,
+aktif ağaç tohumdan yeniden başlar; hedefin üstündeki fazla yeni ağaca devreder (ör. %224 → dik → %124 → dik → %24).
+
+- Dikmeyi unutursan, **sezon sonunda** (gece yarısı ya da *Yeni tohum*) tamamlanmış ağaçlar kendiliğinden dikilir.
+- Her ağaç kendi tohumuyla büyür; bahçedeki iki Sakura birbirinin aynısı olmaz.
+- Bahçe ekranı perspektifli bir çayır: eski ağaçlar arkada, yeniler önde. Üzerine gelince ayrıntı; **Liste** görünümü de var.
+
+## İstatistikler
+
+Araç çubuğundaki grafik düğmesi:
+
+- **Özet:** bugün · dün · bu hafta (geçen haftaya göre %) · geçen hafta · son 30 gün
+- **Günlük (30 gün) / Haftalık (12 hafta, pazartesi başlar)** yığılmış çubuklar, kaynaklara göre renkli; günlük görünümde hedef çizgisi
+- **Token / Kod satırı** birimi, **Grafik / Tablo** görünümü, **CSV indir**
+
+Veritabanı: `%APPDATA%\sakura-token-garden\data\sakura.db` (SQLite). İlk açılışta bilgisayardaki tüm geçmiş
+birkaç saniyede içe aktarılır; uygulama kapalı kaldığı günler sonraki açılışta tamamlanır. Her model çağrısı tekil
+bir kimlikle saklandığı için hiçbir şey iki kez sayılmaz. Herhangi bir SQLite aracıyla `daily_usage`, `weekly_usage`
+ve `garden` tablolarını sorgulayabilirsin.
 
 ## Nasıl çalışır?
 
 ```
-~/.claude/projects/**/*.jsonl   ─┐
-                                 ├─► lib/tracker.js ─► lib/garden.js ─► lib/app-server.js ──SSE──► public/ (canvas bahçe)
-~/.codex/sessions/**/*.jsonl    ─┘   (dosya kuyruğu)    (sezon, ölçü,     (127.0.0.1)          ▲
-                                                         AI başına ağaç)                        └── desktop/ (Electron kabuğu)
+~/.claude/projects/**/*.jsonl          ─┐
+~/.codex/sessions/**/*.jsonl           ─┼─► lib/tracker.js ─► lib/db.js (SQLite)   ─► lib/stats.js (günlük/haftalık)
+%APPDATA%/sakura-token-garden/vscode/  ─┘   (dosya kuyruğu)  └► lib/garden.js (sezon, ağaçlar, hasat)
+        ▲ VS Code eklentisi                                        └► lib/app-server.js ──SSE──► public/ (canvas)
+                                                                                                  ▲ desktop/ (Electron)
 ```
 
-- **Claude Code** her asistan yanıtını `usage` alanıyla yazar. Aynı yanıt her içerik bloğu için tekrar yazıldığından ve `--resume` eski mesajları yeni dosyaya kopyaladığından `message.id + requestId` ile tekilleştirilir.
-- **Codex** oturum başına kümülatif `token_count` olayları yazar; ardışık toplamların farkı alınır, tekrarlanan olaylar ve devralınan (resume) toplamlar sayılmaz.
-- Dosyalar sadece sona eklendiği için her dosyanın okunan bayt konumu tutulur; yarım satır, satır sonu gelene kadar bekletilir. `fs.watch` + yoklama ile yeni tokenlar ~1–2 sn içinde ağaca yansır.
-- Ağaçlar tamamen prosedüreldir (görsel dosya yok): dallar, yapraklar, tomurcuklar ve çiçekler türün sabit tohumundan üretilir ve `ilerleme = token / hedef` ile büyür.
+- **Claude Code** yanıt başına `usage` yazar; aynı yanıt her içerik bloğu için tekrarlandığından `message.id + requestId` ile tekilleştirilir.
+- **Codex** kümülatif `token_count` yazar; ardışık farklar alınır, resume ile devralınan toplam sayılmaz.
+- **VS Code eklentisi** elle yazılan satırları 5 sn'de bir yerel JSONL dosyasına ekler.
 
-### Görünüm
+### Ölçüler ve hedefler
 
-- **Her AI'a ayrı ağaç** (varsayılan): bu sezon token harcayan her AI kendi ağacını büyütür. Codex'i çalıştırdığın anda Sakura'nın yanına bir Momiji dikilir. Panel en son çalışan AI'ın ağacını gösterir; alttaki AI çiplerine tıklayarak odağı değiştirebilirsin.
-- **Tek ağaç:** tüm tokenlar tek ağaçta toplanır; türünü bu sezon en çok kullandığın AI belirler.
-
-### Ölçüler
-
-| Ölçü | Formül | Varsayılan hedef |
+| Ölçü (token) | Formül | Varsayılan hedef |
 |---|---|---|
-| **Ağırlıklı** (varsayılan) | girdi + önbelleğe yazma + çıktı + önbellekten okuma × 0,1 | 5M |
+| **Ağırlıklı** | girdi + önbelleğe yazma + çıktı + önbellekten okuma × 0,1 | 5M |
 | Yeni tokenlar | girdi + önbelleğe yazma + çıktı | 1,5M |
 | Sadece çıktı | çıktı (düşünme dahil) | 300K |
 | Tümü | hepsi | 40M |
 
-### Sezonlar
+Kod hedefi (VS Code): **50 · 100 · 250 · 1000 · 5000** satır (varsayılan 250) ya da özel.
 
-- **Günlük** (varsayılan): ağaçlar her gece yarısı yeniden tohumlanır. Alt paneldeki bahçe son 7 günü gösterir.
-- **Manuel**: *Yeni tohum ek* butonuna basana kadar büyür; biten sezonlar bahçe geçmişine yazılır.
-
-Ayarlar tarayıcı sürümünde `data/state.json`, masaüstü uygulamasında `%APPDATA%\sakura-token-garden\` altında saklanır.
+**Görünüm:** *Her AI'a ayrı ağaç* (varsayılan) ya da *Tek ağaç* (tokenlar birleşir). VS Code ağacı her zaman ayrıdır.
+**Sezon:** *Günlük* (her gece yeni tohum) ya da *Manuel* (*Yeni tohum ek*'e kadar).
 
 ## Önizleme ve demo
 
-- `?preview=0.65&ai=claude|codex|both` — sunucu verisi olmadan belirli bir ilerlemeyi gösterir.
-- `?preview=auto` — 0'dan 1'e tüm büyümeyi 45 saniyede oynatır.
-- `npm run demo` (tarayıcı) veya `npm run app:demo` (masaüstü) — sahte ajan akışı.
+- `?preview=0.65&ai=claude|codex|vscode|both|all` — sunucu verisi olmadan önizleme
+- `?preview=auto` — tüm büyümeyi 45 saniyede oynatır
+- `npm run demo` / `npm run app:demo` — sahte ajan akışı
 
 ## Gizlilik
 
-- Sunucu yalnızca `127.0.0.1` adresini dinler; başka bilgisayarlardan erişilemez.
-- Transcriptlerden yalnızca token sayıları, zaman damgası, oturum kimliği, model ve klasör adı kullanılır; mesaj içerikleri saklanmaz/kullanılmaz ve hiçbir veri makineden çıkmaz.
-- Yabancı `Host` başlıkları (DNS rebinding) ve başka sitelerden gelen istekler reddedilir. Masaüstü penceresi yalnızca kendi yerel sunucusunu açar; sayfaya Node erişimi verilmez.
+- Sunucu yalnızca `127.0.0.1`'i dinler; yabancı `Host`/`Origin` istekleri reddedilir.
+- Transcriptlerden yalnızca sayılar, zaman, oturum, model ve klasör adı kullanılır; mesaj içerikleri saklanmaz.
+- VS Code eklentisi kod içeriğini değil, yalnızca satır/karakter sayısını, dili ve klasör adını kaydeder.
 
 ## Proje yapısı
 
 ```
-desktop/main.js      Electron: ana pencere, widget, tepsi, bildirim, görev çubuğu
-desktop/preload.js   Sayfaya açılan 3 komut (widget, ana pencere, çıkış)
-desktop/make-icons.js İkonları kodla üretir (npm run icons)
-server.js            Tarayıcı sürümü komut satırı
-lib/app-server.js    HTTP + SSE sunucu (iki sürüm de kullanır)
-lib/parsers.js       Claude & Codex satır → token olayı
-lib/tracker.js       Klasör keşfi, dosya kuyruğu okuma, izleme
-lib/garden.js        Ölçüler, sezonlar, AI başına ağaçlar, ayarlar
-public/themes.js     AI → ağaç türü temaları (renk, şekil, evre adları)
-public/tree.js       Prosedürel bahçe (canvas): bitkiler, sprite'lar, parçacıklar
-public/app.js        Arayüz, SSE istemcisi, ayarlar, widget
-test/                node:test birim + uçtan uca testler
+desktop/            Electron: pencereler, tepsi, bildirim, ikon üretimi
+vscode-extension/   VS Code eklentisi (elle yazılan satırlar)
+lib/parsers.js      Claude / Codex / VS Code satır → olay (tekil id)
+lib/tracker.js      Klasör izleme, dosya kuyruğu, geçmiş aktarımı
+lib/db.js           SQLite: olaylar, günlük/haftalık görünümler, bahçe
+lib/garden.js       Ölçüler, sezonlar, ağaçlar, hasat
+lib/stats.js        Günlük/haftalık seriler, CSV
+lib/app-server.js   HTTP + SSE sunucu
+public/themes.js    Sakura / Momiji / Fuji temaları
+public/tree.js      Prosedürel bahçe (canvas)
+public/app.js       Arayüz · public/stats.js İstatistikler · public/garden-view.js Bahçem
+test/               node:test (25 test)
 ```
 
-Yeni bir AI eklemek için: `lib/parsers.js`'e çözümleyici, `lib/tracker.js`'e klasör, `public/themes.js`'e tema.
-
-## Test
+## Geliştirme
 
 ```bash
-npm test
+npm install        # yalnızca masaüstü paketleme için (Electron)
+npm test           # 25 test
+npm run app        # masaüstü uygulaması (kaynaktan)
+npm run dist       # kurulum dosyası → dist/
+npm run icons      # ikonları yeniden üret
 ```
-
-## Sorun giderme
-
-- **Ağaç büyümüyor:** Ayarlar → *Kaynaklar* bölümünde "dosya izleniyor" yazmalı. Klasörler farklı yerdeyse `CLAUDE_CONFIG_DIR` veya `CODEX_HOME` ortam değişkenlerini ayarla.
-- **Ağaç çok hızlı/yavaş büyüyor:** Ayarlar → *Hedef*.
-- **Windows SmartScreen uyarısı:** kurulum dosyası imzalı değil; "Ek bilgi → Yine de çalıştır".

@@ -6,6 +6,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, Notification, screen, shell } = require('electron');
 const { SakuraServer } = require('../lib/app-server');
+const { appDataDir } = require('../lib/paths');
 
 const APP_NAME = 'Sakura Token Bahçesi';
 const ROOT = path.join(__dirname, '..');
@@ -13,6 +14,7 @@ const ASSETS = path.join(__dirname, 'assets');
 const AI = {
   claude: { name: 'Claude Code', species: 'Sakura', emoji: '🌸', finale: 'Hanami' },
   codex: { name: 'Codex', species: 'Momiji', emoji: '🍁', finale: 'Momijigari' },
+  vscode: { name: 'VS Code', species: 'Fuji', emoji: '🪻', finale: 'Fujimatsuri', lines: true },
 };
 
 const startHidden = process.argv.includes('--hidden');
@@ -265,13 +267,15 @@ function onSnapshot(snap) {
   updateTaskbar(snap);
   if (tray) tray.setToolTip(trayTooltip(snap));
   for (const tree of snap.trees) {
-    const key = `${snap.season.key}:${tree.id}:${snap.settings.target}`;
+    const key = `${snap.season.key}:${tree.id}:${tree.unit === 'lines' ? snap.settings.codeTarget : snap.settings.target}`;
     if (tree.progress < 1 || finished.has(key)) continue;
     finished.add(key);
     // Açılışta zaten tamamlanmış ağaçlar için bildirim gösterilmez.
     if (first || !Notification.isSupported()) continue;
     const ai = AI[tree.id] || { emoji: '🌳', finale: 'Tamamlandı', name: tree.id };
-    new Notification({ title: `${ai.emoji} ${ai.finale}!`, body: `${ai.name} bu sezonun token hedefini tamamladı.`, icon: icon() }).show();
+    const reason = ai.lines ? "VS Code'da elle yazdığın satırlar kod hedefine ulaştı." : `${ai.name} token hedefini tamamladı.`;
+    const body = `${reason} ${ai.species} ağacını bahçeye dikebilirsin.`;
+    new Notification({ title: `${ai.emoji} ${ai.finale}!`, body, icon: icon() }).show();
   }
 }
 
@@ -326,7 +330,8 @@ if (!app.requestSingleInstanceLock()) {
       demo,
       desktop: true,
       publicDir: path.join(ROOT, 'public'),
-      dataDir: path.join(app.getPath('userData'), 'data'),
+      // Tarayıcı sürümü ve VS Code eklentisiyle aynı klasör (Windows'ta %APPDATA%\sakura-token-garden).
+      dataDir: path.join(appDataDir(), 'data'),
     });
     server.on('snapshot', onSnapshot);
     server.on('shutdown-request', quit);
