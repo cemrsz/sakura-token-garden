@@ -85,7 +85,7 @@ async function main() {
   console.log(`     Widget: ${result.url}/?mode=widget\n`);
   if (!options.demo) {
     for (const [source, item] of Object.entries(sakura.tracker.info())) {
-      const name = source === 'claude' ? 'Claude Code' : 'Codex';
+      const name = { claude: 'Claude Code', codex: 'Codex', vscode: 'VS Code' }[source] || source;
       console.log(`     ${item.found ? '✓' : '·'} ${name.padEnd(12)} ${item.found ? item.dirs.join(', ') : 'bulunamadı'}`);
     }
     const snap = sakura.snapshot();
