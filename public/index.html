@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fbf1e4">
+  <meta name="description" content="Claude Code ve Codex ajanları token harcadıkça yavaşça büyüyen ağaçlar: Claude için Sakura, Codex için Momiji.">
+  <title>Token Bahçesi</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app" id="app">
+    <div class="stage" id="stage">
+      <canvas id="scene" role="img" aria-label="Sakura ağacı"></canvas>
+      <div class="hud" id="hud">
+        <div class="hud-actions">
+          <button type="button" data-desktop="open" title="Bahçeyi aç" aria-label="Bahçeyi aç"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></svg></button>
+          <button type="button" data-desktop="hide" title="Widget'ı gizle" aria-label="Widget'ı gizle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <div class="hud-top">
+          <span class="dot" data-dot></span>
+          <strong data-stage-name>Uykudaki tohum</strong>
+          <span class="hud-pct" data-percent>0%</span>
+        </div>
+        <div class="bar"><i data-bar></i></div>
+        <div class="hud-bottom">
+          <span data-value-short>0 / 2M</span>
+          <span data-rate>—</span>
+        </div>
+      </div>
+    </div>
+
+    <header class="brand" id="brand">
+      <p class="kicker" id="brand-kicker">Token Bahçesi</p>
+      <h1 id="brand-title">Sakura</h1>
+      <p class="status"><span class="dot" data-dot></span><span id="status-text">Bağlanıyor…</span></p>
+    </header>
+
+    <div class="toolbar">
+      <button class="icon-btn" id="pip-btn" type="button" title="Üstte tut (her pencerenin üstünde küçük widget)" aria-label="Üstte tut">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><rect x="12" y="11" width="7" height="6" rx="1.5" class="solid"/></svg>
+      </button>
+      <button class="icon-btn" id="settings-btn" type="button" title="Ayarlar" aria-label="Ayarlar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>
+      </button>
+    </div>
+
+    <section class="panel" id="panel" aria-label="İlerleme">
+      <div class="panel-main">
+        <div class="ring" id="ring">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><circle class="track" cx="32" cy="32" r="27"/><circle class="fill" id="ring-fill" cx="32" cy="32" r="27"/></svg>
+          <strong id="percent">0%</strong>
+        </div>
+        <div class="stage-info">
+          <p class="stage-index" id="stage-index">Evre 1 / 12</p>
+          <h2 id="stage-name">Uykudaki tohum</h2>
+          <p id="stage-msg">Toprağın altında sessizce ilk tokenleri bekliyor.</p>
+        </div>
+        <div class="numbers">
+          <strong id="value">0</strong>
+          <span id="target">/ 2M token</span>
+          <small id="meta">Ağırlıklı · Bugün</small>
+        </div>
+      </div>
+      <div class="progress" aria-hidden="true">
+        <div class="progress-fill" id="progress-fill"></div>
+        <div class="ticks" id="ticks"></div>
+      </div>
+      <div class="panel-foot">
+        <div class="chips" id="source-chips"></div>
+        <div class="garden" id="garden" role="list" aria-label="Bahçe geçmişi"></div>
+      </div>
+    </section>
+
+    <div class="pip-placeholder" id="pip-placeholder" hidden>
+      <p>🌸 Ağaç, üstte tutulan küçük pencerede büyüyor.</p>
+      <button type="button" id="pip-return">Buraya geri al</button>
+    </div>
+
+    <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+      <div class="sheet-head">
+        <h2 id="sheet-title">Bahçe ayarları</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Kapat">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body">
+        <section>
+          <h3>Sezon</h3>
+          <div class="segmented" role="group" aria-label="Sezon modu">
+            <button type="button" data-mode="daily">Günlük</button>
+            <button type="button" data-mode="manual">Manuel</button>
+          </div>
+          <p class="hint" id="mode-hint"></p>
+          <button type="button" class="primary" id="replant">🌱 Yeni tohum ek</button>
+        </section>
+
+        <section>
+          <h3>Görünüm <small>kullandığın AI'a göre</small></h3>
+          <div class="segmented" role="group" aria-label="Ağaç düzeni">
+            <button type="button" data-layout="split">Her AI'a ayrı ağaç</button>
+            <button type="button" data-layout="single">Tek ağaç</button>
+          </div>
+          <p class="hint" id="layout-hint"></p>
+        </section>
+
+        <section>
+          <h3>Hedef <small>tam büyüme için (ağaç başına)</small></h3>
+          <label class="target-row">
+            <input id="target-input" type="number" min="1000" step="1000" inputmode="numeric" aria-label="Hedef token">
+            <span>token</span>
+          </label>
+          <div class="presets" id="presets"></div>
+        </section>
+
+        <section>
+          <h3>Ölçüm</h3>
+          <div class="metric-list" id="metric-list" role="radiogroup" aria-label="Token ölçümü"></div>
+        </section>
+
+        <section>
+          <h3>Kaynaklar</h3>
+          <div class="source-list" id="source-list"></div>
+        </section>
+
+        <section>
+          <h3>Bu sezonun dökümü</h3>
+          <dl class="breakdown" id="breakdown"></dl>
+          <div class="sessions" id="sessions"></div>
+        </section>
+
+        <section>
+          <h3>Widget</h3>
+          <div class="row-buttons">
+            <button type="button" id="pip-btn-2">Üstte tut</button>
+            <button type="button" id="popup-btn">Küçük pencere</button>
+          </div>
+          <p class="hint" id="widget-hint">“Üstte tut”, bahçeyi diğer tüm pencerelerin üstünde duran küçük bir pencereye taşır (Chrome / Edge). Masaüstü uygulaması için <code>npm run app</code>.</p>
+        </section>
+
+        <section class="danger">
+          <button type="button" class="link" id="shutdown">Sunucuyu kapat</button>
+        </section>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
