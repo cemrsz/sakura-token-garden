@@ -1,10 +1,10 @@
 {
   "name": "sakura-token-garden",
   "version": "1.0.0",
-  "description": "Claude Code ve Codex token harcadıkça yavaşça büyüyen ağaç görselleştiricisi.",
+  "description": "Claude Code ve Codex token harcadıkça yavaşça büyüyen ağaçlar: Claude için Sakura, Codex için Momiji. Masaüstü uygulaması + tarayıcı sürümü.",
   "private": true,
   "license": "MIT",
-  "main": "server.js",
+  "main": "desktop/main.js",
   "bin": {
     "sakura-garden": "server.js"
   },
@@ -12,11 +12,62 @@
     "node": ">=18"
   },
   "scripts": {
+    "app": "electron .",
+    "app:demo": "electron . --demo",
     "start": "node server.js --open",
     "serve": "node server.js",
     "widget": "node server.js --widget",
     "demo": "node server.js --demo --open --port 4880",
+    "icons": "electron desktop/make-icons.js",
+    "dist": "electron-builder --win",
     "test": "node --test test/parsers.test.js test/garden.test.js test/tracker.test.js"
   },
-  "author": "Hüseyin Cem Sallan"
+  "devDependencies": {
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3"
+  },
+  "author": "Hüseyin Cem Sallan",
+  "build": {
+    "appId": "com.sakura.tokengarden",
+    "productName": "Sakura Token Bahcesi",
+    "copyright": "Hüseyin Cem Sallan",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "desktop/**",
+      "lib/**",
+      "public/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sakura Token Bahçesi",
+      "artifactName": "SakuraTokenBahcesi-Kurulum-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "SakuraTokenBahcesi-${version}-portable.${ext}"
+    }
+  }
 }

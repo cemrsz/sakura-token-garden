@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs>
+  <radialGradient id="petal" cx="0.5" cy="0.5" r="0.6"><stop offset="0" stop-color="#fffafc"/><stop offset="0.5" stop-color="#ffc6d7"/><stop offset="1" stop-color="#f08fb0"/></radialGradient>
+  <radialGradient id="maple" cx="0.5" cy="0.45" r="0.6"><stop offset="0" stop-color="#ffd08a"/><stop offset="0.5" stop-color="#f4893c"/><stop offset="1" stop-color="#d9472b"/></radialGradient>
+  <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7ee"/><stop offset="1" stop-color="#fbdbe4"/></linearGradient>
+</defs>
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#tile)" stroke="#e7b9c6" stroke-width="6"/>
+  <ellipse cx="256" cy="420" rx="150" ry="26" fill="#e9c9a6" opacity=".6"/>
+  <g transform="translate(214 218)">
+    <g fill="url(#petal)" stroke="#c4507a" stroke-width="11" stroke-linejoin="round"><path d="M0 0 C-85.6 -30.4 -96.6 -118.7 -27.6 -138 L0 -115.9 L27.6 -138 C96.6 -118.7 85.6 -30.4 0 0Z" transform="rotate(0)"/><path d="M0 0 C-85.6 -30.4 -96.6 -118.7 -27.6 -138 L0 -115.9 L27.6 -138 C96.6 -118.7 85.6 -30.4 0 0Z" transform="rotate(72)"/><path d="M0 0 C-85.6 -30.4 -96.6 -118.7 -27.6 -138 L0 -115.9 L27.6 -138 C96.6 -118.7 85.6 -30.4 0 0Z" transform="rotate(144)"/><path d="M0 0 C-85.6 -30.4 -96.6 -118.7 -27.6 -138 L0 -115.9 L27.6 -138 C96.6 -118.7 85.6 -30.4 0 0Z" transform="rotate(216)"/><path d="M0 0 C-85.6 -30.4 -96.6 -118.7 -27.6 -138 L0 -115.9 L27.6 -138 C96.6 -118.7 85.6 -30.4 0 0Z" transform="rotate(288)"/></g>
+    <circle r="22.1" fill="#f6cf63" stroke="#d9963a" stroke-width="6.6"/>
+  </g>
+  <g transform="translate(358 352) rotate(16)">
+    <path d="M0 11.2 Q6.7 56 -4.5 95.2" stroke="#93301d" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <polygon points="-46.6,-6.5 -66.6,-20.4 -57.6,-23.3 -83.1,-44.2 -51.5,-34.7 -54.1,-43.8 -31.5,-35 -18.5,-30.7 -19.2,-52.6 -15.8,-81.4 -7.7,-73.5 0,-112 7.7,-73.5 15.8,-81.4 19.2,-52.6 18.5,-30.7 31.5,-35 54.1,-43.8 51.5,-34.7 83.1,-44.2 57.6,-23.3 66.6,-20.4 46.6,-6.5 35.8,1.3 30.7,6.5 43.3,16.6 37.2,18.1 53.2,33.2 32.6,25.5 33.9,31.7 19.3,24.7 0,22.4 -19.3,24.7 -33.9,31.7 -32.6,25.5 -53.2,33.2 -37.2,18.1 -43.3,16.6 -30.7,6.5 -35.8,1.3" fill="url(#maple)" stroke="#93301d" stroke-width="8" stroke-linejoin="round"/>
+  </g>
+</svg>
