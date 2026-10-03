@@ -87,3 +87,25 @@ test('Codex: sayaç sıfırlanırsa son tur kullanılır', () => {
   const event = parseCodexLine(codexLine(codexUsage(300, 0, 20), codexUsage(300, 0, 20)), state);
   assert.deepEqual([event.input, event.output], [300, 20]);
 });
+
+test('olaylar kalıcı ve tekil id taşır; aynı satır tekrar okununca aynı id çıkar', () => {
+  const first = createClaudeParser()(claudeLine({ id: 'msg_9', requestId: 'req_9', usage: usage(1, 2, 3, 4) }));
+  const again = createClaudeParser()(claudeLine({ id: 'msg_9', requestId: 'req_9', usage: usage(1, 2, 3, 4) }));
+  assert.equal(first.id, 'c:msg_9:req_9');
+  assert.equal(first.id, again.id);
+  assert.deepEqual(first.total, { input: 1, output: 4, cacheWrite: 2, cacheRead: 3 });
+
+  const state = createCodexFileState({ session: 's' });
+  const codex = parseCodexLine(codexLine(codexUsage(100, 0, 10), codexUsage(100, 0, 10)), state);
+  assert.equal(codex.id, 'x:s:110');
+});
+
+test('VS Code satır kayıtları okunur', () => {
+  const { parseVscodeLine } = require('../lib/parsers');
+  const event = parseVscodeLine(JSON.stringify({ id: 'w1-5-1', ts: 1790000000000, window: 'w1', project: 'demo', language: 'javascript', lines: 3, chars: 90 }));
+  assert.equal(event.source, 'vscode');
+  assert.equal(event.id, 'v:w1-5-1');
+  assert.deepEqual([event.lines, event.chars, event.project, event.model], [3, 90, 'demo', 'javascript']);
+  assert.equal(parseVscodeLine('{"id":"x","ts":1,"lines":0,"chars":0}'), null);
+  assert.equal(parseVscodeLine('bozuk "lines"'), null);
+});
