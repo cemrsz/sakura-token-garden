@@ -1,0 +1,51 @@
+{
+  "name": "sakura-code-garden",
+  "displayName": "Sakura Kod Bahçesi",
+  "description": "Elle yazdığın kod satırlarını sayar; Sakura Token Bahçesi'nde Fuji (morsalkım) ağacını büyütür.",
+  "version": "1.0.0",
+  "publisher": "cemrsz",
+  "license": "MIT",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cemrsz/sakura-token-garden"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "sakuraGarden.open",
+        "title": "Sakura: Bahçeyi aç"
+      },
+      {
+        "command": "sakuraGarden.toggle",
+        "title": "Sakura: Satır saymayı aç / kapat"
+      }
+    ],
+    "configuration": {
+      "title": "Sakura Kod Bahçesi",
+      "properties": {
+        "sakuraGarden.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Elle yazılan kod satırlarını say."
+        },
+        "sakuraGarden.minTypedChars": {
+          "type": "number",
+          "default": 2,
+          "minimum": 1,
+          "description": "Bir satırın elle yazılmış sayılması için o satırda en az kaç karakterin tuşla yazılması gerektiği."
+        }
+      }
+    }
+  }
+}
