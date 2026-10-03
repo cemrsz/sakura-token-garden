@@ -74,3 +74,36 @@ test('izleyici geçmişi okur, yeni satırları canlı yakalar', async (t) => {
   assert.equal(tracker.info().claude.files, 2);
   assert.equal(tracker.events.filter((e) => e.source === 'claude').length, 3);
 });
+
+test('veritabanına aktarım ve eski dosyaların geçmiş aktarımı (backfill), VS Code klasörü', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sakura-bf-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const claudeDir = path.join(root, 'claude', 'p');
+  const vscodeDir = path.join(root, 'vscode');
+  fs.mkdirSync(claudeDir, { recursive: true });
+  fs.mkdirSync(vscodeDir, { recursive: true });
+
+  // 10 gün önce yazılmış (bellek ufkunun dışında) eski oturum.
+  const old = path.join(claudeDir, 'old.jsonl');
+  fs.writeFileSync(old, claudeLine('eski', 40, -10 * 86400_000));
+  const tenDaysAgo = new Date(Date.now() - 10 * 86400_000);
+  fs.utimesSync(old, tenDaysAgo, tenDaysAgo);
+  fs.writeFileSync(path.join(vscodeDir, 'bugun_w1.jsonl'), `${JSON.stringify({ id: 'w1-1', ts: Date.now(), lines: 4, chars: 80, project: 'p', language: 'js' })}\n`);
+
+  const sunk = [];
+  const tracker = new Tracker({
+    roots: { claude: [path.join(root, 'claude')], codex: [], vscode: [vscodeDir] },
+    horizon: Date.now() - 7 * 86400_000,
+    sink: (events) => sunk.push(...events),
+  });
+  await tracker.start();
+  t.after(() => tracker.stop());
+
+  assert.deepEqual(tracker.events.map((e) => [e.source, e.lines]), [['vscode', 4]]);
+  assert.equal(sunk.length, 1);
+
+  await tracker.backfill(0);
+  assert.deepEqual(sunk.map((e) => e.id).sort(), ['c:eski:r-eski', 'v:w1-1']);
+  assert.equal(tracker.events.length, 1, 'eski olay belleğe girmez, yalnızca veritabanına gider');
+  assert.equal(tracker.backfillState.running, false);
+});
