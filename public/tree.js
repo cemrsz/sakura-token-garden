@@ -345,12 +345,47 @@ function drawMaple(ctx, r, light, mid, dark, line, lineWidth) {
   ctx.stroke();
 }
 
+// Sarkan morsalkım salkımı: sprite'ın üst ortası sapın bağlandığı noktadır.
+function drawWisteria(ctx, size, [light, mid, low, line], count = 22) {
+  const cx = size / 2;
+  const top = size * 0.05;
+  ctx.strokeStyle = '#5d6b3a';
+  ctx.lineWidth = size * 0.03;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx, 0);
+  ctx.quadraticCurveTo(cx + size * 0.03, top + size * 0.25, cx, top + size * 0.62);
+  ctx.stroke();
+  // Alttan üste: üstteki iri ve açık çiçekler alttakilerin önünde kalır.
+  for (let i = count - 1; i >= 0; i -= 1) {
+    const t = i / (count - 1);
+    const y = top + size * 0.08 + t * size * 0.8;
+    const width = size * 0.27 * (1 - t * 0.78);
+    const x = cx + Math.sin(i * 2.399) * width * (0.45 + 0.55 * ((i * 7) % 3) / 2);
+    const r = size * (0.088 - t * 0.045);
+    const gradient = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, 0, x, y, r * 1.2);
+    gradient.addColorStop(0, light);
+    gradient.addColorStop(1, mix(mid, low, Math.min(1, t * 1.3)));
+    ctx.fillStyle = gradient;
+    ctx.strokeStyle = line;
+    ctx.lineWidth = size * 0.014;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r * 1.12, r * 0.86, Math.sin(i) * 0.4, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 function blossomSprite(size, theme, tint) {
   const canvas = canvasOf(size);
   const ctx = canvas.getContext('2d');
   const { flower } = theme;
   const [inner, middle, outer, line] = flower.palettes[tint];
   const r = size * 0.47;
+  if (flower.shape === 'wisteria') {
+    drawWisteria(ctx, size, [inner, middle, outer, line]);
+    return canvas;
+  }
   ctx.translate(size / 2, size / 2);
   if (flower.shape === 'maple') {
     drawMaple(ctx, r * 0.98, inner, middle, outer, line, size * 0.028);
@@ -397,6 +432,10 @@ function budSprite(size, theme) {
   const canvas = canvasOf(size);
   const ctx = canvas.getContext('2d');
   const { bud } = theme;
+  if (bud.shape === 'wisteria') {
+    drawWisteria(ctx, size, [bud.light, bud.mid, bud.dark, bud.line], 12);
+    return canvas;
+  }
   ctx.translate(size / 2, size / 2);
   const r = size * 0.4;
   if (bud.shape === 'maple') {
@@ -497,11 +536,12 @@ function glowSprite(size, theme) {
 // Bitki: tek bir AI'ın ağacı
 
 class Plant {
-  constructor(scene, id) {
+  constructor(scene, id, { seed } = {}) {
     this.scene = scene;
     this.id = id;
     this.theme = themeOf(id);
-    this.tree = pickTree(this.theme.seed, this.theme.spread);
+    // Bahçedeki her ağaç kendi tohumuyla büyür; aynı türden ağaçlar birbirinin kopyası olmaz.
+    this.tree = pickTree(Number.isFinite(seed) ? seed : this.theme.seed, this.theme.spread);
     this.rnd = mulberry32(this.theme.seed ^ 0x9e3779b9);
     this.target = 0;
     this.shown = 0;
@@ -690,10 +730,12 @@ class Plant {
     ctx.beginPath();
     ctx.ellipse(0, mh * 1.02, mw * 1.25, mh * 0.42, 0, 0, TAU);
     ctx.fill();
-    ctx.fillStyle = 'rgba(214,190,150,.35)';
-    ctx.beginPath();
-    ctx.ellipse(0, mh * 1.05, mw * 2.2, mh * 0.62, 0, 0, TAU);
-    ctx.fill();
+    if (!this.still) {
+      ctx.fillStyle = 'rgba(214,190,150,.35)';
+      ctx.beginPath();
+      ctx.ellipse(0, mh * 1.05, mw * 2.2, mh * 0.62, 0, 0, TAU);
+      ctx.fill();
+    }
 
     const path = new Path2D();
     path.moveTo(-mw * 0.56, mh * 0.98);
@@ -1005,6 +1047,7 @@ class Plant {
     const p = this.shown;
     const ctx = this.ctx;
     const wind = this.reduced ? 0 : 1;
+    const hang = this.theme.flower.hang;
     for (const flower of this.tree.flowers) {
       const budStart = flower.birth - PHASE.budLead;
       if (p < budStart) break;
@@ -1015,14 +1058,26 @@ class Plant {
         const bud = easeOut(clamp((p - budStart) / 0.03)) * (1 - bloom);
         if (bud > 0.02) {
           const size = flower.size * 0.55 * bud;
-          this.spriteTransform(at.x, at.y, at.a + Math.PI / 2 + wiggle, size / 48);
-          ctx.drawImage(this.sprites.bud, -24, -24);
+          if (hang) {
+            // Salkım tomurcuğu daldan aşağı sarkar.
+            this.spriteTransform(at.x, at.y, wiggle * 0.6, size / 48);
+            ctx.drawImage(this.sprites.bud, -24, 0);
+          } else {
+            this.spriteTransform(at.x, at.y, at.a + Math.PI / 2 + wiggle, size / 48);
+            ctx.drawImage(this.sprites.bud, -24, -24);
+          }
         }
       }
       if (bloom > 0) {
-        const size = flower.size * easeBack(bloom);
-        this.spriteTransform(at.x, at.y, flower.rot + wiggle, size / 96);
-        ctx.drawImage(this.sprites.blossoms[flower.tint], -48, -48);
+        if (hang) {
+          const size = flower.size * 1.25 * easeBack(bloom);
+          this.spriteTransform(at.x, at.y, wiggle * 0.6, size / 96);
+          ctx.drawImage(this.sprites.blossoms[flower.tint], -48, 0);
+        } else {
+          const size = flower.size * easeBack(bloom);
+          this.spriteTransform(at.x, at.y, flower.rot + wiggle, size / 96);
+          ctx.drawImage(this.sprites.blossoms[flower.tint], -48, -48);
+        }
       }
     }
     this.treeTransform();
@@ -1350,6 +1405,36 @@ export class GardenScene {
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
   }
+}
+
+// Bahçem ekranı için tam büyümüş bir ağacın durağan resmi (bir kez çizilir, sonra kopyalanır).
+export function renderTreeImage(id, seed, height = 220, dpr = 1) {
+  const canvas = document.createElement('canvas');
+  const still = { ctx: null, dpr, time: 0, reduced: true };
+  const plant = new Plant(still, id, { seed });
+  const { minX, maxX, minY } = plant.tree.bounds;
+  const pad = 8;
+  const treeH = -minY + MOUND.height * 1.15 + pad * 2;
+  const scale = height / treeH;
+  canvas.width = Math.ceil((maxX - minX + pad * 2) * scale * dpr);
+  canvas.height = Math.ceil(height * dpr);
+  still.ctx = canvas.getContext('2d');
+  plant.still = true;
+  plant.shown = 1;
+  plant.target = 1;
+  plant.view = { scale, ox: (pad - minX) * scale, oy: (pad - minY) * scale };
+  for (const limb of plant.tree.limbs) poseLimb(limb, 0, 0);
+  plant.treeTransform();
+  plant.drawGround();
+  plant.drawTufts(false);
+  plant.drawCanopy();
+  plant.drawWood();
+  plant.drawTufts(true);
+  plant.drawLeaves();
+  plant.drawFlowers();
+  // Görüntü oranı: kök noktası (höyük tepesi) resmin neresinde?
+  canvas.anchor = { x: (pad - minX) / (maxX - minX + pad * 2), y: (pad - minY + MOUND.height * 1.1) / treeH };
+  return canvas;
 }
 
 export { PHASE };
