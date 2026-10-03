@@ -361,6 +361,124 @@ button.chip:hover { border-color: var(--chip); }
 .danger { text-align: center; }
 .link { padding: 4px 6px; border: 0; background: none; color: #a4524b; font-size: 0.8rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 
+/* --- İstatistikler ------------------------------------------------------- */
+.stats-dialog {
+  width: min(980px, calc(100% - 24px));
+  max-height: calc(100% - 32px);
+  padding: 22px 24px 18px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: var(--paper-solid);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+.stats-dialog[open] { display: flex; flex-direction: column; animation: rise 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.stats-dialog::backdrop { background: rgba(59, 42, 34, 0.24); backdrop-filter: blur(2px); }
+@keyframes rise { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+.stats-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.stats-head h2 { margin: 0; font: 600 1.45rem/1.2 var(--serif); }
+.stats-head .kicker { margin-bottom: 4px; }
+.stats-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 16px 0 6px; }
+.stats-controls .segmented { display: inline-grid; grid-auto-flow: column; grid-template-columns: none; }
+.stats-controls .segmented button { padding: 6px 12px; font-size: 0.82rem; }
+.csv-link { margin-left: auto; color: var(--ink-soft); font-size: 0.82rem; font-weight: 700; text-underline-offset: 3px; }
+.stats-body { min-height: 200px; overflow-y: auto; }
+.progress-note { margin: 4px 0 8px; }
+.tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 10px 0 14px; }
+.tile { display: grid; gap: 3px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 16px; background: #fff; font-variant-numeric: tabular-nums; }
+.tile > span { color: var(--muted); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.tile strong { font: 600 1.45rem/1.1 var(--serif); }
+.tile small { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--ink-soft); font-size: 0.74rem; }
+.tile small span { display: inline-flex; align-items: center; gap: 4px; }
+.tile .change { color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 6px; color: var(--ink-soft); font-size: 0.8rem; font-weight: 600; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i, .tile i, .chart-tip i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+.chart-area { position: relative; }
+.chart { display: block; max-width: 100%; height: auto; overflow: visible; font-family: var(--sans); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .baseline { stroke: rgba(91, 58, 41, 0.35); stroke-width: 1; }
+.chart .target { stroke: var(--ink-soft); stroke-width: 1.2; stroke-dasharray: 5 4; opacity: 0.6; }
+.chart .axis { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart .target-label { fill: var(--ink-soft); font-weight: 700; }
+.chart .value-label { fill: var(--ink); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.chart .hit { fill: transparent; cursor: default; }
+.chart .hit.on { fill: rgba(91, 58, 41, 0.06); }
+.chart-tip {
+  position: absolute;
+  z-index: 2;
+  min-width: 190px;
+  padding: 10px 12px;
+  transform: translateX(-50%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(92, 58, 38, 0.16);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.chart-tip strong { display: block; margin-bottom: 6px; font-size: 0.82rem; }
+.chart-tip div { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.chart-tip span { flex: 1; color: var(--ink-soft); }
+.chart-tip .total { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--line); }
+.chart-tip .muted span, .chart-tip .muted b { color: var(--muted); font-weight: 600; }
+.table-wrap { max-height: 300px; overflow: auto; border: 1px solid var(--line); border-radius: 14px; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.table-wrap th, .table-wrap td { padding: 7px 12px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.table-wrap th:first-child { text-align: left; }
+.table-wrap thead th { position: sticky; top: 0; background: var(--paper-solid); color: var(--ink-soft); font-size: 0.74rem; }
+.db-info { margin: 12px 0 0; overflow: hidden; color: var(--muted); font-size: 0.74rem; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .csv-link { margin-left: 0; }
+}
+.mode-widget #stats-btn { display: none; }
+
+/* --- Bahçem ---------------------------------------------------------------- */
+.garden-btn { position: relative; }
+.garden-btn .badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 99px;
+  background: var(--pink-deep);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+}
+.garden-btn .badge[hidden] { display: none; }
+.plant-btn {
+  margin-top: 8px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(145deg, var(--pink), var(--pink-deep));
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18), 0 8px 18px rgba(92, 58, 38, 0.18);
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 800;
+  animation: nudge 2.4s ease-in-out infinite;
+}
+.plant-btn[hidden] { display: none; }
+.plant-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18); }
+@keyframes nudge { 0%, 100% { transform: none; } 50% { transform: translateY(-2px); } }
+.garden-summary { margin: 6px 0 0; color: var(--ink-soft); font-size: 0.84rem; font-variant-numeric: tabular-nums; }
+.garden-actions { display: flex; align-items: center; gap: 10px; }
+.garden-actions .segmented { display: inline-grid; grid-auto-flow: column; grid-template-columns: none; }
+.garden-actions .segmented button { padding: 6px 12px; font-size: 0.82rem; }
+.garden-scene { position: relative; margin-top: 14px; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; }
+.garden-scene[hidden] { display: none; }
+#garden-canvas { display: block; width: 100%; }
+#garden-list { margin-top: 14px; }
+.garden-tip { min-width: 210px; }
+.garden-dialog .hint { margin-top: 12px; }
+
 /* --- Bildirim ------------------------------------------------------------- */
 .toast {
   position: absolute;

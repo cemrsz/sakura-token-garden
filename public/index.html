@@ -38,6 +38,13 @@
     </header>
 
     <div class="toolbar">
+      <button class="icon-btn garden-btn" id="garden-btn" type="button" title="Bahçem — dikilen ağaçlar" aria-label="Bahçem">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M8 20v-5"/><circle cx="8" cy="11" r="4" class="solid"/><path d="M16.5 20v-3"/><circle cx="16.5" cy="14" r="3"/></svg>
+        <span class="badge" id="garden-badge" hidden></span>
+      </button>
+      <button class="icon-btn" id="stats-btn" type="button" title="İstatistikler (günlük / haftalık)" aria-label="İstatistikler">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5.5" y="11" width="3" height="6" rx="1"/><rect x="10.5" y="6" width="3" height="11" rx="1" class="solid"/><rect x="15.5" y="9" width="3" height="8" rx="1"/></svg>
+      </button>
       <button class="icon-btn" id="pip-btn" type="button" title="Üstte tut (her pencerenin üstünde küçük widget)" aria-label="Üstte tut">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><rect x="12" y="11" width="7" height="6" rx="1.5" class="solid"/></svg>
       </button>
@@ -61,6 +68,7 @@
           <strong id="value">0</strong>
           <span id="target">/ 2M token</span>
           <small id="meta">Ağırlıklı · Bugün</small>
+          <button type="button" class="plant-btn" id="plant-btn" hidden>🌸 Bahçeye dik</button>
         </div>
       </div>
       <div class="progress" aria-hidden="true">
@@ -115,6 +123,16 @@
         </section>
 
         <section>
+          <h3>Kod hedefi <small>VS Code · elle yazılan satır</small></h3>
+          <label class="target-row">
+            <input id="code-target-input" type="number" min="1" step="10" inputmode="numeric" aria-label="Kod satırı hedefi">
+            <span>satır</span>
+          </label>
+          <div class="presets" id="code-presets"></div>
+          <p class="hint">Yapıştırma, AI tamamlamaları ve otomatik biçimlendirme sayılmaz. Sayım için <code>vscode-extension</code> klasöründeki eklenti kurulu olmalı.</p>
+        </section>
+
+        <section>
           <h3>Ölçüm</h3>
           <div class="metric-list" id="metric-list" role="radiogroup" aria-label="Token ölçümü"></div>
         </section>
@@ -143,6 +161,59 @@
           <button type="button" class="link" id="shutdown">Sunucuyu kapat</button>
         </section>
       </div>
+    </dialog>
+
+    <dialog class="stats-dialog" id="stats" aria-labelledby="stats-title">
+      <div class="stats-head">
+        <div>
+          <p class="kicker">Bilgisayarındaki veritabanı</p>
+          <h2 id="stats-title">Günlük ve haftalık geçmiş</h2>
+        </div>
+        <button class="icon-btn" type="button" data-close aria-label="Kapat">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="stats-controls">
+        <div class="segmented" role="group" aria-label="Dönem">
+          <button type="button" data-stats-view="days">Günlük</button>
+          <button type="button" data-stats-view="weeks">Haftalık</button>
+        </div>
+        <div class="segmented" role="group" aria-label="Birim">
+          <button type="button" data-stats-unit="tokens">Token</button>
+          <button type="button" data-stats-unit="lines">Kod satırı</button>
+        </div>
+        <div class="segmented" role="group" aria-label="Görünüm">
+          <button type="button" data-stats-mode="chart">Grafik</button>
+          <button type="button" data-stats-mode="table">Tablo</button>
+        </div>
+        <a class="csv-link" href="/api/stats.csv" download>CSV indir</a>
+      </div>
+      <div class="stats-body" id="stats-body"><p class="hint">Yükleniyor…</p></div>
+    </dialog>
+
+    <dialog class="stats-dialog garden-dialog" id="garden-view" aria-labelledby="garden-title">
+      <div class="stats-head">
+        <div>
+          <p class="kicker">Tamamlanan ağaçların</p>
+          <h2 id="garden-title">Bahçem</h2>
+          <p class="garden-summary" id="garden-summary"></p>
+        </div>
+        <div class="garden-actions">
+          <div class="segmented" role="group" aria-label="Görünüm">
+            <button type="button" data-garden-mode="garden">Bahçe</button>
+            <button type="button" data-garden-mode="list">Liste</button>
+          </div>
+          <button class="icon-btn" type="button" data-close aria-label="Kapat">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="garden-scene" id="garden-scene">
+        <canvas id="garden-canvas" role="img" aria-label="Dikilen ağaçların bahçesi"></canvas>
+        <div class="chart-tip garden-tip" id="garden-tip" hidden></div>
+      </div>
+      <div id="garden-list" hidden></div>
+      <p class="hint">Bir ağaç hedefe ulaşınca panelde “Bahçeye dik” düğmesi çıkar. Dikmeyi unutursan sezon sonunda kendiliğinden dikilir; hedefin üstündeki fazlası yeni ağaca devreder.</p>
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
