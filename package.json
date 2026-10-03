@@ -1,0 +1,22 @@
+{
+  "name": "sakura-token-garden",
+  "version": "1.0.0",
+  "description": "Claude Code ve Codex token harcadıkça yavaşça büyüyen ağaç görselleştiricisi.",
+  "private": true,
+  "license": "MIT",
+  "main": "server.js",
+  "bin": {
+    "sakura-garden": "server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js --open",
+    "serve": "node server.js",
+    "widget": "node server.js --widget",
+    "demo": "node server.js --demo --open --port 4880",
+    "test": "node --test test/parsers.test.js test/garden.test.js test/tracker.test.js"
+  },
+  "author": "Hüseyin Cem Sallan"
+}
