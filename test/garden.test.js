@@ -95,3 +95,53 @@ test('tek ağaç modunda tüm tokenlar toplanır, türü en çok harcayan AI bel
   assert.equal(snap.trees[0].value, 400);
   assert.equal(snap.trees[0].combined, true);
 });
+
+test('VS Code ağacı satırla ve kendi hedefiyle büyür', () => {
+  const now = Date.now();
+  const state = garden.applySettings(garden.defaultState(), { metric: 'output', target: 1000, codeTarget: 100 }, now);
+  const snap = garden.snapshot(state, [
+    event(now - 5000, 'claude', { output: 500 }),
+    { ...event(now - 1000, 'vscode'), lines: 25, chars: 700 },
+  ], now);
+  const code = snap.trees.find((tree) => tree.id === 'vscode');
+  assert.equal(code.unit, 'lines');
+  assert.equal(code.value, 25);
+  assert.equal(code.progress, 0.25);
+  assert.equal(snap.value, 500); // satırlar token toplamına karışmaz
+  assert.equal(snap.focus, 'vscode');
+  assert.equal(snap.settings.codeTarget, 100);
+  assert.deepEqual(snap.settings.codePresets, [50, 100, 250, 1000, 5000]);
+});
+
+test('bahçeye dikme: hedef kadar değer düşülür, fazlası yeni ağaca devreder', () => {
+  const now = Date.now();
+  let state = garden.applySettings(garden.defaultState(), { metric: 'output', target: 1000 }, now);
+  const events = [event(now - 1000, 'claude', { output: 2300 })];
+  let snap = garden.snapshot(state, events, now);
+  assert.equal(snap.trees[0].progress, 2.3);
+
+  state = garden.harvest(state, 'claude', 1000, now);
+  snap = garden.snapshot(state, events, now);
+  assert.equal(snap.trees[0].value, 1300);
+  assert.equal(snap.trees[0].planted, 1);
+  assert.equal(snap.bySource.claude.value, 2300, 'kaynak toplamı değişmez, yalnızca ağaç ilerlemesi');
+
+  // Sezon değişince ofsetler geçerliliğini yitirir.
+  const tomorrow = now + garden.DAY;
+  snap = garden.snapshot(state, [event(tomorrow - 1000, 'claude', { output: 100 })], tomorrow);
+  assert.equal(snap.trees[0].value, 100);
+});
+
+test('kapanan sezonda tamamlanmış ama dikilmemiş ağaçlar hesaplanır', () => {
+  const now = Date.now();
+  let state = garden.applySettings(garden.defaultState(), { metric: 'output', target: 1000, codeTarget: 50 }, now);
+  const key = garden.season(state, now).key;
+  state = garden.harvest(state, 'claude', 1000, now);
+  const totals = [
+    { source: 'claude', input: 0, output: 3200, cacheWrite: 0, cacheRead: 0, lines: 0 },
+    { source: 'codex', input: 0, output: 900, cacheWrite: 0, cacheRead: 0, lines: 0 },
+    { source: 'vscode', input: 0, output: 0, cacheWrite: 0, cacheRead: 0, lines: 130 },
+  ];
+  const trees = garden.completedTrees(state, totals, key);
+  assert.deepEqual(trees.map((tree) => [tree.source, tree.count, tree.unit]), [['claude', 2, 'tokens'], ['vscode', 2, 'lines']]);
+});
