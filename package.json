@@ -1,7 +1,7 @@
 {
   "name": "sakura-token-garden",
-  "version": "1.1.0",
-  "description": "Claude Code ve Codex token harcadıkça yavaşça büyüyen ağaçlar: Claude için Sakura, Codex için Momiji. Masaüstü uygulaması + tarayıcı sürümü.",
+  "version": "1.2.0",
+  "description": "Claude, Claude Code ve Codex token harcadıkça yavaşça büyüyen ağaçlar: Claude Code için Sakura, Claude sohbetleri için Ume, Codex için Momiji. Masaüstü uygulaması + tarayıcı sürümü + tarayıcı eklentisi.",
   "private": true,
   "license": "MIT",
   "main": "desktop/main.js",

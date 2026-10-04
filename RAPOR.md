@@ -148,3 +148,71 @@ Kaynak koddan: `npm install` → `npm run app`. Kurulum dosyasını yeniden üre
 | Uç noktalar: `/api/stats`, `/api/stats.csv`, `/api/garden`, `/api/garden/plant` | ✅ |
 
 **Doğrulayamadığım:** VS Code'da gerçekten klavyeyle yazarak uçtan uca sayımı (VS Code'a yazı yazma iznim yok). Mantık sahte ortamda, okuma tarafı gerçek dosyalarla test edildi; VS Code penceresini yeniden yükledikten sonra durum çubuğunda `🪻` sayacını görmelisin.
+
+---
+
+## 9. Güncelleme (1.2.0) — düz Claude da sayılıyor: 💮 Ume
+
+**İstek:** Görselleştirici yalnızca Claude Code'la değil, düz Claude kullanınca da büyüsün.
+
+### 9.1 Sorun: sohbetler diske token yazmıyor
+Claude Code her yanıtın `usage` bilgisini `~/.claude/projects` altına yazıyor; claude.ai ve Claude masaüstü
+uygulamasının sohbet sekmesi ise bilgisayarda okunabilir bir token kaydı bırakmıyor. Bu yüzden iki yol açıldı:
+
+| Kaynak | Nasıl okunuyor | Doğruluk |
+|---|---|---|
+| **claude.ai** (Chrome / Edge / Brave) | Yeni tarayıcı eklentisi (`browser-extension/`) yanıt akışını ölçüp yerel uygulamaya yolluyor | Tahmini (~3,5 karakter = 1 token) |
+| **Cowork** (Claude masaüstü) | `%APPDATA%\Claude\local-agent-mode-sessions\…\.claude\projects` altındaki transcriptler, Claude Code çözümleyicisiyle | Gerçek `usage` |
+
+İkisi de yeni **Claude** kaynağını ve kendi ağacını büyütüyor: **💮 Ume** (Japon erik çiçeği). Kışın sonunda,
+yapraklardan önce açan çiçek; final *Umemi* (erik çiçeği seyri, Hanami'nin eşi). Yuvarlak, çentiksiz taç yapraklar,
+uzun ercikler, dokuzuncu evrede dallarda yuvarlak kırmızı tomurcuklar, koyu ve eğri bir gövde.
+
+### 9.2 Tarayıcı eklentisi nasıl ölçüyor?
+- Sayfanın `fetch` çağrısını sarıyor ve yalnızca iki yanıtın **kopyasını** okuyor: sohbet geçmişi (bağlam uzunluğu)
+  ve completion akışı (SSE). Sayfanın aldığı yanıt değişmiyor; testte sayfanın akışı birebir aynı geldi.
+- Yeni mesaj + ekler + stil → **girdi**; görünen daldaki geçmiş → **önbellekten okuma** (claude.ai bağlamı önbellekten
+  okutuyor, ağırlıklı ölçüde %10); yanıt + düşünme + araç çağrısı → **çıktı**; web araması sonuçları → **girdi**.
+  Akışta gerçek `usage` gelirse tahmin yerine o kullanılıyor.
+- Mesaj içeriği hiçbir yere gitmiyor: uygulamaya yalnızca sayılar, model adı ve sohbet başlığı gidiyor.
+- Uygulama kapalıysa ölçümler eklentide kuyrukta bekliyor (en fazla 2000), dakikada bir yeniden deneniyor.
+- Sunucudaki `/api/ingest` yalnızca eklenti kökeninden gelen ölçümü kabul ediyor; eklenti ayar değiştiremiyor,
+  başka siteler hiçbir şey gönderemiyor (testle doğrulandı: 403 / 415).
+- Açılır pencere: bağlantı durumu, Ume ağacının bugünkü yüzdesi, bu tarayıcıda bugün ölçülen yanıtlar, ölçüm anahtarı.
+
+### 9.3 Yol boyunca bulunan hata
+Sunucu istek gövdesini parça parça birleştirirken, iki TCP parçasına bölünen çok baytlı bir harf (ğ, ş, ü…)
+bozuluyordu ("ğ" → "��"). Eski sürümde ayar istekleri küçük olduğu için görünmüyordu; eklentinin büyük paketlerinde
+sohbet başlıklarını bozacaktı. Düzeltildi ve bunu yakalayan bir test eklendi (düzeltme olmadan kalıyor, düzeltmeyle geçiyor).
+
+### 9.4 Doğrulama
+| Kontrol | Sonuç |
+|---|---|
+| `npm test` | ✅ 38/38 (claude.ai çözümleyicisi, Cowork okuyucusu, `/api/ingest`, sahte claude.ai sayfasında ölçer, arka plan kuyruğu → gerçek sunucu → Ume, UTF-8) |
+| Ume'nin evreleri, dört ağaçlı bahçe, İstatistikler'de üçüncü seri (mavi), Bahçem | ✅ Ekran görüntüleriyle |
+| Gerçek sunucuya eklenti gibi ölçüm gönderme (geçici veri klasörüyle) | ✅ Ume büyüdü; ayarlarda "claude.ai: 1 günlük kayıt · Cowork: 1 oturum" |
+| Eklenti açılır penceresi (sahte tarayıcı API'siyle) | ✅ |
+| Masaüstü 1.2.0 paketi | `dist/1.2.0/` (aşağıya bakın) |
+
+**Doğrulayamadıklarım:**
+- **Canlı claude.ai trafiği.** claude.ai oturumuna erişimim yok; ölçer, claude.ai'nin kullandığı Anthropic akış biçimine
+  (ve eski `completion` biçimine) göre yazıldı ve sahte bir sayfada test edildi. Eklentiyi kurup bir mesaj gönderdikten
+  sonra 💮 simgesinde "1 yanıt" görmelisin; görmezsen claude.ai akış biçimini değiştirmiş olabilir.
+- **Gerçek Cowork kayıtların.** Bu kayıtları açıp incelemem izinle engellendi; okuyucu yalnızca sahte Cowork klasörüyle
+  test edildi. Biçim Claude Code'unkiyle aynı olduğu için aynı çözümleyici kullanılıyor; uygulama bu klasörü senin
+  bilgisayarında kendisi okuyacak.
+- **Claude masaüstü sohbet sekmesi** desteklenmiyor: token kaydı yazmıyor, eklenti alamıyor; uygulamanın kendi
+  önbelleğini okumak hem kırılgan hem de izin verilmeyen bir yoldu. Sayılmasını istediğin sohbetleri tarayıcıda yap.
+
+### 9.5 Verilen kararlar
+- **Ayrı ağaç (Ume):** Claude sohbetleri Claude Code'un Sakura'sına karıştırılmadı; istatistiklerde ve Bahçem'de ayrı
+  görünüyor. İstersen ayarlardaki *Tek ağaç* görünümü hepsini birleştirir, kaynak anahtarıyla Claude kapatılabilir.
+- **Grafik rengi mavi (#2a7fc1):** Ume pembe-kırmızı ama grafikte Claude Code'un pembesi ve Codex'in turuncusu yanında
+  renk körlüğünde de ayrışsın diye mavi seçildi.
+- **Tahmin oranı 3,5 karakter/token:** İngilizcede ~4, Türkçe ve kodda ~3; ikisinin arası. `lib/parsers.js`'te tek sabit.
+
+### 9.6 Kullanmak için
+1. Açık olan 1.1.0 uygulamasından tepsideki 🌸 menüsüyle çık, `dist\1.2.0\SakuraTokenBahcesi-Kurulum-1.2.0.exe` ile kur
+   (ya da `npm run app`).
+2. Chrome/Edge'de `chrome://extensions` → Geliştirici modu → **Paketlenmemiş öğe yükle** → `browser-extension`.
+3. claude.ai sekmesini yenile, sohbet et — bahçede Sakura'nın yanında Ume filizlenir.
