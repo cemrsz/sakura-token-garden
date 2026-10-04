@@ -81,3 +81,34 @@ test('demo sunucusu eklenti ölçümlerini diske yazmaz', async (t) => {
   const response = await fetch(`http://127.0.0.1:${port}/api/ingest`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"events":[]}' });
   assert.equal(response.status, 503);
 });
+
+test('istek gövdesinde ikiye bölünen Türkçe harf bozulmaz', async (t) => {
+  const http = require('node:http');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sakura-utf8-'));
+  const previous = process.env.SAKURA_DATA_DIR;
+  process.env.SAKURA_DATA_DIR = root;
+  const server = new SakuraServer({ dataDir: path.join(root, 'data'), port: 4990, roots: { web: [path.join(root, 'claude-web')] } });
+  const { port } = await server.start();
+  t.after(async () => {
+    await server.stop();
+    if (previous === undefined) delete process.env.SAKURA_DATA_DIR;
+    else process.env.SAKURA_DATA_DIR = previous;
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const title = 'Ümit ğüşiöç çiçeği';
+  const body = Buffer.from(JSON.stringify({ events: [{ id: 'c:utf8', ts: Date.now(), conversation: 'c', title, outputChars: 70 }] }));
+  const cut = body.indexOf(Buffer.from('ğ')) + 1; // iki baytlık harfin ortası
+  const status = await new Promise((resolve, reject) => {
+    const req = http.request({ host: '127.0.0.1', port, path: '/api/ingest', method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': body.length } }, (res) => {
+      res.resume();
+      res.on('end', () => resolve(res.statusCode));
+    });
+    req.on('error', reject);
+    req.write(body.subarray(0, cut));
+    setTimeout(() => req.end(body.subarray(cut)), 30);
+  });
+  assert.equal(status, 200);
+  const [file] = fs.readdirSync(path.join(root, 'claude-web'));
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'claude-web', file), 'utf8').trim()).title, title);
+});
