@@ -107,3 +107,40 @@ test('veritabanına aktarım ve eski dosyaların geçmiş aktarımı (backfill),
   assert.equal(tracker.events.length, 1, 'eski olay belleğe girmez, yalnızca veritabanına gider');
   assert.equal(tracker.backfillState.running, false);
 });
+
+test('Claude sohbet ağacı: tarayıcı ölçümleri ve Cowork transcriptleri, Cowork dışı dosyalar atlanır', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sakura-chat-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const webDir = path.join(root, 'claude-web');
+  const session = path.join(root, 'cowork', 'acct', 'org', 'local_1');
+  const transcripts = path.join(session, '.claude', 'projects', 'C--outputs');
+  fs.mkdirSync(webDir, { recursive: true });
+  fs.mkdirSync(transcripts, { recursive: true });
+  fs.mkdirSync(path.join(session, 'outputs'), { recursive: true });
+
+  const web = (id, outputChars) => `${JSON.stringify({ id, ts: Date.now(), conversation: 'conv-1', title: 'Tatil planı', model: 'claude-test', inputChars: 35, contextChars: 0, toolChars: 0, outputChars, thinkingChars: 0, usage: null })}\n`;
+  const webFile = path.join(webDir, '2026-10-04.jsonl');
+  fs.writeFileSync(webFile, web('conv-1:m1', 700) + web('conv-1:m1', 700));
+  fs.writeFileSync(path.join(transcripts, 'cw.jsonl'), claudeLine('cw1', 30));
+  // Aynı biçimde olsa da denetim kaydı ve çıktı klasörü sayılmamalı.
+  fs.writeFileSync(path.join(session, 'audit.jsonl'), claudeLine('audit', 999));
+  fs.writeFileSync(path.join(session, 'outputs', 'x.jsonl'), claudeLine('out', 999));
+
+  const tracker = new Tracker({ roots: { web: [webDir], cowork: [path.join(root, 'cowork')] }, horizon: Date.now() - 3600_000 });
+  await tracker.start();
+  t.after(() => tracker.stop());
+
+  const chat = tracker.events.filter((e) => e.source === 'chat');
+  assert.equal(tracker.events.length, 2, 'tekrarlanan ölçüm ve Cowork dışı dosyalar sayılmaz');
+  assert.deepEqual(chat.map((e) => [e.project, e.output]).sort(), [['Cowork', 30], ['Tatil planı', 200]]);
+  const info = tracker.info();
+  assert.equal(info.chat.files, 2);
+  assert.deepEqual(info.chat.feeds, { web: { found: true, files: 1 }, cowork: { found: true, files: 1 } });
+  assert.equal(info.claude.found, false);
+
+  const live = once(tracker, 'events');
+  fs.appendFileSync(webFile, web('conv-1:m2', 350));
+  await tracker.enqueue(() => tracker.readFile(webFile));
+  const [fresh] = await live;
+  assert.deepEqual(fresh.map((e) => [e.source, e.output, e.id]), [['chat', 100, 'w:conv-1:m2']]);
+});
