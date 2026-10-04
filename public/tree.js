@@ -294,6 +294,15 @@ function petalPath(ctx, r) {
   ctx.closePath();
 }
 
+// Erik (ume) taç yaprağı: sakuranınkinin aksine ucu çentiksiz, yuvarlak.
+function umePetalPath(ctx, r) {
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.bezierCurveTo(-r * 0.78, -r * 0.28, -r * 0.74, -r * 1.04, 0, -r);
+  ctx.bezierCurveTo(r * 0.74, -r * 1.04, r * 0.78, -r * 0.28, 0, 0);
+  ctx.closePath();
+}
+
 // Beş loblu akçaağaç yaprağı; merkez (0,0), uçlar r yarıçapında.
 const MAPLE_LOBES = [[-152, 0.84], [-90, 1], [-28, 0.84], [32, 0.56], [148, 0.56]];
 function maplePath(ctx, r) {
@@ -392,6 +401,9 @@ function blossomSprite(size, theme, tint) {
     return canvas;
   }
   ctx.lineJoin = 'round';
+  // Erik çiçeğinde yuvarlak taç yapraklar ve çok sayıda uzun, ince ercik olur.
+  const ume = flower.shape === 'ume';
+  const petal = ume ? umePetalPath : petalPath;
   for (let i = 0; i < 5; i += 1) {
     ctx.save();
     ctx.rotate((i / 5) * TAU);
@@ -399,7 +411,7 @@ function blossomSprite(size, theme, tint) {
     gradient.addColorStop(0, inner);
     gradient.addColorStop(0.45, middle);
     gradient.addColorStop(1, outer);
-    petalPath(ctx, r);
+    petal(ctx, r * (ume ? 0.94 : 1));
     ctx.fillStyle = gradient;
     ctx.fill();
     ctx.strokeStyle = line;
@@ -407,18 +419,21 @@ function blossomSprite(size, theme, tint) {
     ctx.stroke();
     ctx.restore();
   }
+  const stamens = ume ? 15 : 7;
+  const reach = ume ? 0.5 : 0.34;
   ctx.strokeStyle = flower.stamen;
-  ctx.lineWidth = size * 0.018;
+  ctx.lineWidth = size * (ume ? 0.012 : 0.018);
   ctx.lineCap = 'round';
-  for (let i = 0; i < 7; i += 1) {
-    const a = (i / 7) * TAU + 0.3;
+  for (let i = 0; i < stamens; i += 1) {
+    const a = (i / stamens) * TAU + 0.3;
+    const length = reach * (ume ? 0.82 + 0.18 * ((i * 5) % 3) / 2 : 1);
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(Math.cos(a) * r * 0.34, Math.sin(a) * r * 0.34);
+    ctx.lineTo(Math.cos(a) * r * length, Math.sin(a) * r * length);
     ctx.stroke();
     ctx.fillStyle = flower.anther;
     ctx.beginPath();
-    ctx.arc(Math.cos(a) * r * 0.36, Math.sin(a) * r * 0.36, size * 0.025, 0, TAU);
+    ctx.arc(Math.cos(a) * r * (length + 0.02), Math.sin(a) * r * (length + 0.02), size * (ume ? 0.02 : 0.025), 0, TAU);
     ctx.fill();
   }
   ctx.fillStyle = flower.center;
@@ -440,6 +455,27 @@ function budSprite(size, theme) {
   const r = size * 0.4;
   if (bud.shape === 'maple') {
     drawMaple(ctx, r * 1.1, bud.light, bud.mid, bud.dark, bud.line, size * 0.045);
+    return canvas;
+  }
+  if (bud.shape === 'ume') {
+    // Erik tomurcuğu: koyu kahve çanak yaprakların üstünde yuvarlak, kırmızı bir top.
+    ctx.fillStyle = '#6b3a2c';
+    ctx.strokeStyle = '#3e2219';
+    ctx.lineWidth = size * 0.04;
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.5, r * 0.46, r * 0.3, 0, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
+    const ball = ctx.createRadialGradient(-r * 0.3, -r * 0.25, 0, 0, 0, r * 0.8);
+    ball.addColorStop(0, bud.light);
+    ball.addColorStop(0.5, bud.mid);
+    ball.addColorStop(1, bud.dark);
+    ctx.fillStyle = ball;
+    ctx.strokeStyle = bud.line;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.72, 0, TAU);
+    ctx.fill();
+    ctx.stroke();
     return canvas;
   }
   ctx.fillStyle = '#7fae4b';
@@ -510,7 +546,7 @@ function petalSprite(size, theme) {
   const gradient = ctx.createLinearGradient(0, 0, 0, -size * 0.85);
   gradient.addColorStop(0, petal.light);
   gradient.addColorStop(1, petal.dark);
-  petalPath(ctx, size * 0.85);
+  (petal.shape === 'ume' ? umePetalPath : petalPath)(ctx, size * 0.85);
   ctx.fillStyle = gradient;
   ctx.fill();
   ctx.strokeStyle = petal.line;
