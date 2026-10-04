@@ -109,3 +109,41 @@ test('VS Code satır kayıtları okunur', () => {
   assert.equal(parseVscodeLine('{"id":"x","ts":1,"lines":0,"chars":0}'), null);
   assert.equal(parseVscodeLine('bozuk "lines"'), null);
 });
+
+const webLine = (fields = {}) => JSON.stringify({
+  id: 'conv-1:msg-1', ts: 1790000000000, conversation: 'conv-1', title: 'Tatil planı', model: 'claude-test', host: 'claude.ai',
+  inputChars: 350, contextChars: 7000, toolChars: 0, outputChars: 1400, thinkingChars: 350, usage: null, ...fields,
+});
+
+test('claude.ai: karakterlerden tahmini token; bağlam önbellek okuması sayılır', () => {
+  const { createWebParser, CHARS_PER_TOKEN } = require('../lib/parsers');
+  const parse = createWebParser();
+  const event = parse(webLine());
+  assert.equal(CHARS_PER_TOKEN, 3.5);
+  assert.equal(event.source, 'chat');
+  assert.equal(event.id, 'w:conv-1:msg-1');
+  assert.deepEqual([event.session, event.project, event.model], ['conv-1', 'Tatil planı', 'claude-test']);
+  assert.deepEqual([event.input, event.cacheWrite, event.cacheRead, event.output], [100, 0, 2000, 500]);
+  assert.deepEqual(event.total, { input: 100, output: 500, cacheWrite: 0, cacheRead: 2000 });
+});
+
+test('claude.ai: aynı ölçüm iki kez sayılmaz, boş ve bozuk satırlar atlanır', () => {
+  const { createWebParser } = require('../lib/parsers');
+  const parse = createWebParser();
+  assert.ok(parse(webLine()));
+  assert.equal(parse(webLine()), null);
+  assert.equal(parse(webLine({ id: 'conv-1:msg-2', inputChars: 0, contextChars: 0, outputChars: 0, thinkingChars: 0 })), null);
+  assert.equal(parse(webLine({ id: '' })), null);
+  assert.equal(parse('bozuk "conversation"'), null);
+  // Başlık yoksa site adı görünür.
+  assert.equal(parse(webLine({ id: 'conv-2:msg-1', title: '' })).project, 'claude.ai');
+});
+
+test('claude.ai: akışta gerçek usage varsa tahmin yerine o kullanılır', () => {
+  const { createWebParser } = require('../lib/parsers');
+  const parse = createWebParser();
+  const onlyOutput = parse(webLine({ id: 'a', usage: { output_tokens: 777 } }));
+  assert.deepEqual([onlyOutput.input, onlyOutput.cacheRead, onlyOutput.output], [100, 2000, 777]);
+  const exact = parse(webLine({ id: 'b', usage: { input_tokens: 12, cache_creation_input_tokens: 300, cache_read_input_tokens: 9000, output_tokens: 640 } }));
+  assert.deepEqual([exact.input, exact.cacheWrite, exact.cacheRead, exact.output], [12, 300, 9000, 640]);
+});
