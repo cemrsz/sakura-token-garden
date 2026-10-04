@@ -21,8 +21,9 @@ tarayıcı eklentisinin yerel kayıtlarını okur. Hiçbir veri bilgisayarından
 
 ### Masaüstü uygulaması (önerilen)
 
-`dist/1.2.0/SakuraTokenBahcesi-Kurulum-1.2.0.exe` — çift tıkla, kur, Başlat menüsünden aç.
-Kurulumsuz: `dist/1.2.0/SakuraTokenBahcesi-1.2.0-portable.exe`. Eski sürüm açıksa önce tepsideki 🌸 menüsünden çık.
+`dist/SakuraTokenBahcesi-Kurulum-1.2.0.exe` — çift tıkla, kur, Başlat menüsünden aç (kullanıcı başına kurulur:
+`%LOCALAPPDATA%\Programs\Sakura Token Bahcesi`). Kurulumsuz: `dist/SakuraTokenBahcesi-1.2.0-portable.exe`.
+GitHub'da *Releases* sayfasında da var. Eski sürüm açıksa önce tepsideki 🌸 menüsünden çık; ayarlar, geçmiş ve bahçe korunur.
 
 - **Ana pencere:** bahçe, evreler, istatistikler, ayarlar. Kapatınca sistem tepsisine küçülür.
 - **Widget:** çerçevesiz, her zaman üstte duran küçük pencere; sürükle, boyutlandır, konumu hatırlanır.
@@ -153,14 +154,14 @@ lib/app-server.js   HTTP + SSE sunucu
 public/themes.js    Sakura / Ume / Momiji / Fuji temaları
 public/tree.js      Prosedürel bahçe (canvas)
 public/app.js       Arayüz · public/stats.js İstatistikler · public/garden-view.js Bahçem
-test/               node:test (38 test)
+test/               node:test (39 test)
 ```
 
 ## Geliştirme
 
 ```bash
 npm install        # yalnızca masaüstü paketleme için (Electron)
-npm test           # 38 test
+npm test           # 39 test
 npm run app        # masaüstü uygulaması (kaynaktan)
 npm run dist       # kurulum dosyası → dist/
 npm run icons      # ikonları yeniden üret (yalnızca eklenti: npx electron desktop/make-icons.js --browser)

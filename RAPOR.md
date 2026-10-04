@@ -188,11 +188,11 @@ sohbet başlıklarını bozacaktı. Düzeltildi ve bunu yakalayan bir test eklen
 ### 9.4 Doğrulama
 | Kontrol | Sonuç |
 |---|---|
-| `npm test` | ✅ 38/38 (claude.ai çözümleyicisi, Cowork okuyucusu, `/api/ingest`, sahte claude.ai sayfasında ölçer, arka plan kuyruğu → gerçek sunucu → Ume, UTF-8) |
+| `npm test` | ✅ 39/39 (claude.ai çözümleyicisi, Cowork okuyucusu, `/api/ingest`, sahte claude.ai sayfasında ölçer, arka plan kuyruğu → gerçek sunucu → Ume, UTF-8, yükseltmede geçmiş aktarımı) |
 | Ume'nin evreleri, dört ağaçlı bahçe, İstatistikler'de üçüncü seri (mavi), Bahçem | ✅ Ekran görüntüleriyle |
 | Gerçek sunucuya eklenti gibi ölçüm gönderme (geçici veri klasörüyle) | ✅ Ume büyüdü; ayarlarda "claude.ai: 1 günlük kayıt · Cowork: 1 oturum" |
 | Eklenti açılır penceresi (sahte tarayıcı API'siyle) | ✅ |
-| Masaüstü 1.2.0 paketi | `dist/1.2.0/` (aşağıya bakın) |
+| Masaüstü 1.2.0 paketi | ✅ Paketlendi, bu bilgisayara **kuruldu** ve çalışıyor (9.7) |
 
 **Doğrulayamadıklarım:**
 - **Canlı claude.ai trafiği.** claude.ai oturumuna erişimim yok; ölçer, claude.ai'nin kullandığı Anthropic akış biçimine
@@ -212,7 +212,21 @@ sohbet başlıklarını bozacaktı. Düzeltildi ve bunu yakalayan bir test eklen
 - **Tahmin oranı 3,5 karakter/token:** İngilizcede ~4, Türkçe ve kodda ~3; ikisinin arası. `lib/parsers.js`'te tek sabit.
 
 ### 9.6 Kullanmak için
-1. Açık olan 1.1.0 uygulamasından tepsideki 🌸 menüsüyle çık, `dist\1.2.0\SakuraTokenBahcesi-Kurulum-1.2.0.exe` ile kur
-   (ya da `npm run app`).
+1. 1.2.0 bu bilgisayarda kurulu ve açık (9.7). Başka bir bilgisayarda: `dist\SakuraTokenBahcesi-Kurulum-1.2.0.exe`
+   ya da GitHub'daki v1.2.0 sürümü.
 2. Chrome/Edge'de `chrome://extensions` → Geliştirici modu → **Paketlenmemiş öğe yükle** → `browser-extension`.
 3. claude.ai sekmesini yenile, sohbet et — bahçede Sakura'nın yanında Ume filizlenir.
+
+### 9.7 Kurulum (5 Ekim 2026)
+- `dist\win-unpacked` içinden çalışan 1.1.0, kendi kapatma komutuyla düzgünce kapatıldı (veritabanı temiz kapandı).
+- 1.2.0 sessiz kurulumla yüklendi: `%LOCALAPPDATA%\Programs\Sakura Token Bahcesi`, *Yüklü uygulamalar* listesinde
+  "Sakura Token Bahcesi 1.2.0". Masaüstü ve Başlat menüsündeki **Sakura Token Bahçesi** kısayolları kurulumdan geldi;
+  geliştirme kopyasını (`dist\win-unpacked`) gösteren eski "Sakura Token Bahcesi" kısayolları kaldırıldı.
+- Ayarlar, geçmiş ve Bahçem aynen korundu (aynı veri klasörü). Uygulama 4875 portunda; eklenti bu portu kendisi buluyor
+  (boş bir ölçüm paketiyle denendi, gerçek verine sahte kayıt yazılmadı).
+- Kurulumdan sonraki kontrolde bir eksik bulundu ve düzeltildi: geçmiş aktarımı yalnızca son çalışmadan bu yana değişen
+  dosyalara bakıyordu; yani 1.2.0'la gelen Cowork okuyucusunun **eski** oturumları İstatistikler'e hiç girmeyecekti.
+  Artık sonradan eklenen bir okuyucunun geçmişi bir kez baştan aktarılıyor (testi var). Kurulu uygulamada 6 dosya aktarıldı.
+- `dist/` yalnızca 1.2.0 dosyalarını içeriyor; 1.1.0 dosyaları GitHub'daki v1.1.0 sürümünde duruyor.
+- "Windows açılışında başlat" önceden kapalıydı, kapalı bırakıldı (tepsideki 🌸 menüsünden açılabilir).
+- Tarayıcı eklentisini Chrome'a ben kurmadım: Geliştirici modunu açmak tarayıcının güvenlik ayarı; adımlar 9.6'da.

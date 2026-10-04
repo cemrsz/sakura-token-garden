@@ -15,7 +15,7 @@ Arka planda:
 • Günlük ve haftalık geçmiş yerel bir SQLite veritabanında; nisandan bu yana 12.000'den fazla kayıt birkaç saniyede içeri aktarıldı
 • Ağaçlar tamamen kodla çiziliyor (Canvas), tek bir görsel dosyası yok
 • Electron masaüstü uygulaması: sistem tepsisi, her zaman üstte duran widget, hedef bildirimleri
-• Node.js, Electron, VS Code ve tarayıcı eklentisi API'leri, 38 otomatik test
+• Node.js, Electron, VS Code ve tarayıcı eklentisi API'leri, 39 otomatik test
 
 Bir de içgörü: son 30 günde ajanlarım 2,9 milyon çıktı tokenı üretmiş; bu hafta geçen haftaya göre %48 daha fazla. Görmeden hiç fark etmemiştim. 😄
 
