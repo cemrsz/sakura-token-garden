@@ -54,3 +54,14 @@ test('istatistik: günlük seri, pazartesi başlayan haftalar ve ölçü', () =>
   assert.match(csv, /gun,kaynak,cagri/);
   assert.match(csv, /2026-10-04,vscode,4,0,0,0,0,0,42,900/);
 });
+
+test('istatistiklerde Claude sohbet tokenları ayrı seride', () => {
+  const now = new Date(2026, 9, 4, 12).getTime();
+  const rows = [
+    { day: '2026-10-04', source: 'claude', calls: 2, input: 0, output: 100, cacheWrite: 0, cacheRead: 0, lines: 0, chars: 0 },
+    { day: '2026-10-04', source: 'chat', calls: 1, input: 0, output: 40, cacheWrite: 0, cacheRead: 0, lines: 0, chars: 0 },
+  ];
+  const stats = buildStats(rows, { state: garden.applySettings(garden.defaultState(), { metric: 'output' }, now), now, days: 7, weeks: 4 });
+  assert.deepEqual(stats.summary.today.tokens, { total: 140, claude: 100, chat: 40, codex: 0 });
+  assert.equal(stats.weeks.at(-1).tokens.chat, 40);
+});

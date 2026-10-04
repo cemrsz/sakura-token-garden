@@ -145,3 +145,25 @@ test('kapanan sezonda tamamlanmış ama dikilmemiş ağaçlar hesaplanır', () =
   const trees = garden.completedTrees(state, totals, key);
   assert.deepEqual(trees.map((tree) => [tree.source, tree.count, tree.unit]), [['claude', 2, 'tokens'], ['vscode', 2, 'lines']]);
 });
+
+test('Claude sohbeti kendi ağacını büyütür; tek ağaç düzeninde tokenlar birleşir', () => {
+  const now = new Date(2026, 9, 4, 15, 0).getTime();
+  const events = [
+    event(new Date(2026, 9, 4, 10, 0).getTime(), 'claude', { output: 300 }),
+    event(new Date(2026, 9, 4, 11, 0).getTime(), 'chat', { output: 500 }),
+  ];
+  const split = garden.snapshot(garden.applySettings(garden.defaultState(), { target: 1000, metric: 'output' }, now), events, now);
+  assert.deepEqual(split.trees.map((tree) => [tree.id, tree.value]), [['claude', 300], ['chat', 500]]);
+  assert.equal(split.bySource.chat.unit, 'tokens');
+
+  const single = garden.snapshot(garden.applySettings(garden.defaultState(), { target: 1000, metric: 'output', layout: 'single' }, now), events, now);
+  assert.deepEqual(single.trees.map((tree) => [tree.id, tree.value, tree.combined]), [['chat', 800, true]]);
+
+  const off = garden.snapshot(garden.applySettings(garden.defaultState(), { target: 1000, metric: 'output', sources: { chat: false } }, now), events, now);
+  assert.deepEqual(off.trees.map((tree) => tree.id), ['claude']);
+
+  // Eski ayar dosyasında chat anahtarı yoksa kaynak açık başlar.
+  assert.equal(garden.normalizeState({ sources: { claude: true, codex: false, vscode: true } }).sources.chat, true);
+  const done = garden.completedTrees(garden.applySettings(garden.defaultState(), { target: 1000, metric: 'output' }, now), [{ source: 'chat', output: 2500 }], 'd:x');
+  assert.deepEqual(done, [{ source: 'chat', count: 2, unit: 'tokens', target: 1000 }]);
+});
