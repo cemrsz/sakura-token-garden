@@ -112,3 +112,43 @@ test('istek gövdesinde ikiye bölünen Türkçe harf bozulmaz', async (t) => {
   const [file] = fs.readdirSync(path.join(root, 'claude-web'));
   assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'claude-web', file), 'utf8').trim()).title, title);
 });
+
+test('1.1.0 veritabanından yükseltmede yeni okuyucuların (Cowork) eski geçmişi bir kez aktarılır', async (t) => {
+  const { UsageDb } = require('../lib/db');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sakura-upgrade-'));
+  const previous = process.env.SAKURA_DATA_DIR;
+  process.env.SAKURA_DATA_DIR = root;
+  let server = null;
+  t.after(async () => {
+    if (server) await server.stop();
+    if (previous === undefined) delete process.env.SAKURA_DATA_DIR;
+    else process.env.SAKURA_DATA_DIR = previous;
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  // 1.1.0: dün çalışmış, okuyucu kaydı yok.
+  const dataDir = path.join(root, 'data');
+  const old = new UsageDb(path.join(dataDir, 'sakura.db'));
+  old.setMeta('last_run', Date.now() - 86400_000);
+  old.close();
+
+  const tenDaysAgo = Date.now() - 10 * 86400_000;
+  const line = (id) => `${JSON.stringify({ type: 'assistant', timestamp: new Date(tenDaysAgo).toISOString(), sessionId: 's', cwd: '/w', requestId: `r-${id}`, message: { id, model: 'm', usage: { input_tokens: 1, output_tokens: 50 } } })}\n`;
+  const write = (file, id) => {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, line(id));
+    fs.utimesSync(file, new Date(tenDaysAgo), new Date(tenDaysAgo));
+  };
+  write(path.join(root, 'cowork', 'a', 'o', 'local_1', '.claude', 'projects', 'p', 'cw.jsonl'), 'cowork-old');
+  // 1.1.0 bu dosyayı zaten aktarmıştı (ya da bilerek aktarmamıştı); yeniden taranmamalı.
+  write(path.join(root, 'claude', 'p', 'old.jsonl'), 'claude-old');
+
+  const roots = { claude: [path.join(root, 'claude')], cowork: [path.join(root, 'cowork')], web: [path.join(root, 'claude-web')] };
+  server = new SakuraServer({ dataDir, port: 4980, roots });
+  await server.start();
+  const until = Date.now() + 4000;
+  while (!server.db.getMeta('backfilled_feeds') && Date.now() < until) await new Promise((resolve) => setTimeout(resolve, 20));
+
+  assert.deepEqual(server.db.totals().map((row) => [row.source, row.output]), [['chat', 50]]);
+  assert.deepEqual(JSON.parse(server.db.getMeta('backfilled_feeds')).sort(), ['claude', 'codex', 'cowork', 'vscode', 'web']);
+});
