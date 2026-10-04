@@ -29,3 +29,55 @@ test('sunucu anlık görüntüsü: 7 günlük bahçe dizisi ve Bahçem bilgisi a
   assert.equal(stats.days.length, 14);
   assert.equal(stats.weeks.length, 4);
 });
+
+test('eklenti ölçümleri /api/ingest ile alınır, Claude sohbet ağacını büyütür', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sakura-ingest-'));
+  const previous = process.env.SAKURA_DATA_DIR;
+  process.env.SAKURA_DATA_DIR = root;
+  const server = new SakuraServer({ dataDir: path.join(root, 'data'), port: 4975, roots: { web: [path.join(root, 'claude-web')] } });
+  const { port } = await server.start();
+  t.after(async () => {
+    await server.stop();
+    if (previous === undefined) delete process.env.SAKURA_DATA_DIR;
+    else process.env.SAKURA_DATA_DIR = previous;
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const post = (pathname, body, headers = {}) => fetch(`http://127.0.0.1:${port}${pathname}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Origin: 'chrome-extension://abcdefghijklmnop', ...headers },
+    body: JSON.stringify(body),
+  });
+  const measured = { id: 'conv-1:msg-1', ts: Date.now(), conversation: 'conv-1', title: 'Deneme', model: 'claude-test', inputChars: 70, contextChars: 0, outputChars: 3500, thinkingChars: 0, usage: null };
+
+  const response = await post('/api/ingest', { events: [measured, { id: 'kötü id!', ts: Date.now(), outputChars: 5 }] });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, received: 2, accepted: 1 });
+  const files = fs.readdirSync(path.join(root, 'claude-web'));
+  assert.equal(files.length, 1);
+  assert.match(files[0], /^\d{4}-\d{2}-\d{2}\.jsonl$/);
+
+  await server.tracker.enqueue(() => server.tracker.discover());
+  const snap = server.snapshot();
+  assert.equal(snap.bySource.chat.events, 1);
+  assert.equal(snap.bySource.chat.value, 1020); // 20 girdi + 1000 çıktı tokenı (ağırlıklı)
+  assert.ok(snap.trees.some((tree) => tree.id === 'chat'));
+  assert.equal(server.db.totals().find((row) => row.source === 'chat').output, 1000);
+
+  // Eklenti kökeni ayarlara dokunamaz; başka siteler ve JSON olmayan istekler reddedilir.
+  assert.equal((await post('/api/settings', { target: 1000 })).status, 403);
+  assert.equal((await post('/api/ingest', { events: [measured] }, { Origin: 'https://example.com' })).status, 403);
+  assert.equal((await post('/api/ingest', { events: [measured] }, { 'Content-Type': 'text/plain' })).status, 415);
+});
+
+test('demo sunucusu eklenti ölçümlerini diske yazmaz', async (t) => {
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sakura-demo-ingest-'));
+  const server = new SakuraServer({ demo: true, dataDir, port: 4985 });
+  const { port } = await server.start();
+  t.after(async () => {
+    await server.stop();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+  const response = await fetch(`http://127.0.0.1:${port}/api/ingest`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"events":[]}' });
+  assert.equal(response.status, 503);
+});
