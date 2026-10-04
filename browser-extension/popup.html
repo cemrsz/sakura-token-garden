@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sakura Sohbet Bahçesi</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon-48.png" alt="" width="28" height="28">
+    <div>
+      <p class="kicker">Claude · Sohbet Bahçesi</p>
+      <h1>Ume</h1>
+    </div>
+  </header>
+
+  <p class="status" id="status" data-state="idle"><span class="dot"></span><span id="status-text">Bağlanıyor…</span></p>
+
+  <section class="tree" id="tree" hidden>
+    <div class="row"><strong id="value">—</strong><span id="target"></span><b id="percent"></b></div>
+    <div class="bar"><i id="bar"></i></div>
+    <p class="muted" id="tree-meta"></p>
+  </section>
+
+  <section class="today">
+    <div><span>Bu tarayıcıda bugün</span><b id="replies">0 yanıt</b></div>
+    <div><span>Tahmini çıktı</span><b id="output">0 token</b></div>
+  </section>
+
+  <label class="toggle">
+    <input type="checkbox" id="enabled" checked>
+    <span>claude.ai sohbetlerini ölç</span>
+  </label>
+
+  <button type="button" id="open" class="primary" disabled>💮 Bahçeyi aç</button>
+
+  <p class="note">Tokenlar yanıt metninden tahmin edilir (~3,5 karakter = 1 token). Mesaj içeriği gönderilmez; yalnızca sayılar, model adı ve sohbet başlığı bilgisayarındaki Sakura uygulamasına gider.</p>
+
+  <script src="popup.js"></script>
+</body>
+</html>

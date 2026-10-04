@@ -1,0 +1,69 @@
+:root {
+  --bg: #fbf1e4;
+  --card: #fffaf4;
+  --ink: #3f2c25;
+  --muted: #8a7266;
+  --line: #ecd9c8;
+  --accent: #d6456b;
+  --accent-deep: #a92c50;
+  --ok: #4f9a3f;
+  --warn: #c98a1d;
+  --off: #b9a79c;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  width: 300px;
+  margin: 0;
+  padding: 14px 16px 12px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 13px/1.4 "Segoe UI", system-ui, sans-serif;
+}
+
+header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+header img { flex: none; }
+.kicker { margin: 0; font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-deep); }
+h1 { margin: 0; font: 600 22px/1.1 Georgia, "Times New Roman", serif; }
+
+.status {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 0 10px; padding: 7px 10px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--card);
+  font-size: 12px;
+}
+.dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--off); }
+.status[data-state="ok"] .dot { background: var(--ok); }
+.status[data-state="warn"] .dot { background: var(--warn); }
+
+.tree, .today {
+  margin: 0 0 10px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+}
+.row { display: flex; align-items: baseline; gap: 6px; }
+.row strong { font-size: 20px; }
+.row span { color: var(--muted); }
+.row b { margin-left: auto; color: var(--accent-deep); }
+.bar { height: 7px; margin: 8px 0 6px; border-radius: 999px; background: #f1e2d6; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #f39ab0, var(--accent)); transition: width .4s ease; }
+.muted { margin: 0; color: var(--muted); font-size: 11.5px; }
+
+.today div { display: flex; justify-content: space-between; }
+.today div + div { margin-top: 4px; }
+.today span { color: var(--muted); }
+
+.toggle { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+
+.primary {
+  width: 100%; padding: 8px 12px;
+  border: 0; border-radius: 10px; background: var(--accent); color: #fff;
+  font: 600 13px "Segoe UI", system-ui, sans-serif; cursor: pointer;
+}
+.primary:hover { background: var(--accent-deep); }
+.primary:disabled { background: var(--off); cursor: default; }
+.primary:focus-visible, .toggle input:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+
+.note { margin: 10px 0 0; color: var(--muted); font-size: 11px; }

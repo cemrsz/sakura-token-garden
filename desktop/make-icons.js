@@ -36,7 +36,25 @@ function maple(cx, cy, r, rotate, stroke) {
   </g>`;
 }
 
+// Erik (ume) çiçeği: yuvarlak taç yapraklar, uzun ercikler. Tarayıcı eklentisinin simgesi.
+function ume(cx, cy, r, stroke) {
+  const petal = `M0 0 C${round(-0.78 * r)} ${round(-0.28 * r)} ${round(-0.74 * r)} ${round(-1.04 * r)} 0 ${round(-r)} C${round(0.74 * r)} ${round(-1.04 * r)} ${round(0.78 * r)} ${round(-0.28 * r)} 0 0Z`;
+  const petals = [0, 72, 144, 216, 288].map((angle) => `<path d="${petal}" transform="rotate(${angle})"/>`).join('');
+  const stamens = Array.from({ length: 11 }, (_, index) => {
+    const angle = (index / 11) * Math.PI * 2 + 0.3;
+    const x = round(Math.cos(angle) * r * 0.5);
+    const y = round(Math.sin(angle) * r * 0.5);
+    return `<line x2="${x}" y2="${y}"/><circle cx="${x}" cy="${y}" r="${round(r * 0.07)}" fill="#efb12f" stroke="none"/>`;
+  }).join('');
+  return `<g transform="translate(${cx} ${cy})">
+    <g fill="url(#ume)" stroke="#a92c50" stroke-width="${stroke}" stroke-linejoin="round">${petals}</g>
+    <g stroke="#e9c46a" stroke-width="${round(stroke * 0.5)}" stroke-linecap="round">${stamens}</g>
+    <circle r="${round(r * 0.14)}" fill="#b7cf62" stroke="#7d8f3a" stroke-width="${round(stroke * 0.4)}"/>
+  </g>`;
+}
+
 const defs = `<defs>
+  <radialGradient id="ume" cx="0.5" cy="0.5" r="0.62"><stop offset="0" stop-color="#ffffff"/><stop offset="0.45" stop-color="#ffc2d0"/><stop offset="1" stop-color="#e5507a"/></radialGradient>
   <radialGradient id="petal" cx="0.5" cy="0.5" r="0.6"><stop offset="0" stop-color="#fffafc"/><stop offset="0.5" stop-color="#ffc6d7"/><stop offset="1" stop-color="#f08fb0"/></radialGradient>
   <radialGradient id="maple" cx="0.5" cy="0.45" r="0.6"><stop offset="0" stop-color="#ffd08a"/><stop offset="0.5" stop-color="#f4893c"/><stop offset="1" stop-color="#d9472b"/></radialGradient>
   <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7ee"/><stop offset="1" stop-color="#fbdbe4"/></linearGradient>
@@ -50,6 +68,10 @@ const appIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">$
 </svg>`;
 
 const trayIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">${defs}${blossom(32, 32, 30, 4.5)}</svg>`;
+const browserIcon = (stroke) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">${defs}${ume(32, 32, 30, stroke)}</svg>`;
+const EXTENSION = path.join(__dirname, '..', 'browser-extension', 'icons');
+// --browser: yalnızca tarayıcı eklentisinin simgeleri (uygulama ikonlarına dokunmaz).
+const browserOnly = process.argv.includes('--browser');
 
 function render(svg, size) {
   return new Promise((resolve, reject) => {
@@ -73,14 +95,19 @@ function render(svg, size) {
 app.whenReady().then(async () => {
   fs.mkdirSync(OUT, { recursive: true });
   fs.mkdirSync(BUILD, { recursive: true });
-  fs.writeFileSync(path.join(OUT, 'icon.svg'), appIcon);
-  fs.writeFileSync(path.join(__dirname, '..', 'public', 'icon.svg'), appIcon);
-  const outputs = [
-    [appIcon, 512, path.join(BUILD, 'icon.png')],
-    [appIcon, 256, path.join(OUT, 'icon.png')],
-    [trayIcon, 16, path.join(OUT, 'tray.png')],
-    [trayIcon, 32, path.join(OUT, 'tray@2x.png')],
-  ];
+  fs.mkdirSync(EXTENSION, { recursive: true });
+  // Küçük boyutlarda çizgi kalınlaşır ki 16 piksellik araç çubuğu simgesi seçilebilsin.
+  const outputs = [16, 32, 48, 128].map((size) => [browserIcon(size <= 32 ? 4.5 : 3), size, path.join(EXTENSION, `icon-${size}.png`)]);
+  if (!browserOnly) {
+    fs.writeFileSync(path.join(OUT, 'icon.svg'), appIcon);
+    fs.writeFileSync(path.join(__dirname, '..', 'public', 'icon.svg'), appIcon);
+    outputs.push(
+      [appIcon, 512, path.join(BUILD, 'icon.png')],
+      [appIcon, 256, path.join(OUT, 'icon.png')],
+      [trayIcon, 16, path.join(OUT, 'tray.png')],
+      [trayIcon, 32, path.join(OUT, 'tray@2x.png')],
+    );
+  }
   for (const [svg, size, file] of outputs) {
     fs.writeFileSync(file, await render(svg, size));
     console.log('✓', path.relative(path.join(__dirname, '..'), file), `${size}px`);
