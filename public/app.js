@@ -106,7 +106,7 @@ function activity(now = Date.now()) {
     return { state: 'active', text };
   }
   if (sinceLast < RECENT_MS) return { state: 'recent', text: `Son hareket ${ago(snap.lastEventAt, now)} · ${name}` };
-  return { state: 'idle', text: snap.lastEventAt ? `Bahçe dinleniyor · son ${ago(snap.lastEventAt, now)}` : 'Bekleniyor — Claude Code, Codex ya da VS Code’da çalışmaya başla' };
+  return { state: 'idle', text: snap.lastEventAt ? `Bahçe dinleniyor · son ${ago(snap.lastEventAt, now)}` : 'Bekleniyor — Claude, Claude Code, Codex ya da VS Code’da çalışmaya başla' };
 }
 
 function rateText(status) {
@@ -125,6 +125,13 @@ function renderStatus() {
 }
 
 // --- Panel ----------------------------------------------------------------------------
+
+// Claude sohbet ağacının iki besleyicisi: tarayıcı eklentisi (claude.ai) ve Cowork oturumları.
+function chatDetail(feeds) {
+  const web = feeds.web?.files ? `claude.ai: ${feeds.web.files} günlük kayıt` : 'claude.ai için tarayıcı eklentisini kur';
+  const cowork = feeds.cowork?.found ? ` · Cowork: ${feeds.cowork.files} oturum` : '';
+  return web + cowork;
+}
 
 function buildTicks(theme) {
   $('#ticks').innerHTML = theme.stages.slice(1, -1).map((item) => `<i style="left:${item.at * 100}%"></i>`).join('');
@@ -163,7 +170,7 @@ function renderChips() {
     const value = info?.found === false ? 'yok' : amount(id, source.value);
     const hasTree = snap.trees.some((tree) => tree.id === id);
     const classes = ['chip', on ? '' : 'off', hasTree && snap.trees.length > 1 && id === focus ? 'focused' : ''].filter(Boolean).join(' ');
-    return `<button type="button" class="${classes}" data-focus="${id}" style="--chip:${theme.accent}" title="${theme.ai}: ${theme.species} (${theme.speciesDetail})">
+    return `<button type="button" class="${classes}" data-focus="${id}" style="--chip:${theme.accent}" title="${theme.ai}${theme.aiDetail ? ` (${theme.aiDetail})` : ''}: ${theme.species} (${theme.speciesDetail})">
       <span class="dot" data-state="${state}"></span>${theme.emoji} ${theme.ai} <b>${value}</b></button>`;
   }).join('');
 }
@@ -198,6 +205,7 @@ function renderSettings() {
     const info = snap.sources?.[id] || {};
     let detail = info.found ? `${info.files} dosya izleniyor · ${info.active} aktif` : 'Klasör bulunamadı';
     if (isLines(id) && info.found && !info.files) detail = 'Henüz kayıt yok — VS Code eklentisini kur';
+    if (info.feeds && id === 'chat') detail = chatDetail(info.feeds);
     const title = escapeHtml(info.dirs?.join(', ') || '');
     return `<div class="source" title="${title}">
       <div><strong>${theme.emoji} ${theme.ai} <small>· ${theme.species}</small></strong><span>${detail}</span></div>
@@ -364,17 +372,17 @@ function connect() {
 }
 
 // --- Önizleme (sunucusuz) -------------------------------------------------------------------
-// ?preview=0.65 sabit ilerleme, ?preview=auto 0→1 döngüsü. &ai=claude|codex|vscode|both|all
+// ?preview=0.65 sabit ilerleme, ?preview=auto 0→1 döngüsü. &ai=claude|chat|codex|vscode|both|all
 
 function fakeSnapshot(progress) {
   const target = 5_000_000;
   const now = Date.now();
   const ai = params.get('ai') || 'claude';
-  const ids = ai === 'both' ? ['claude', 'codex'] : ai === 'all' ? ['claude', 'codex', 'vscode'] : [ai in THEMES ? ai : 'claude'];
+  const ids = ai === 'both' ? ['claude', 'codex'] : ai === 'all' ? SOURCE_IDS : [ai in THEMES ? ai : 'claude'];
   const codeTarget = 250;
   const trees = ids.map((id, index) => {
-    const p = Math.max(0, progress * [1, 0.72, 0.86][index]);
-    const lines = id === 'vscode';
+    const p = Math.max(0, progress * [1, 0.72, 0.86, 0.64][index]);
+    const lines = isLines(id);
     return { id, unit: lines ? 'lines' : 'tokens', value: Math.round(p * (lines ? codeTarget : target)), progress: p, combined: false, lastAt: now - index * 60000 };
   });
   const value = trees.filter((tree) => tree.unit === 'tokens').reduce((sum, tree) => sum + tree.value, 0);
@@ -384,7 +392,7 @@ function fakeSnapshot(progress) {
   }));
   return {
     now, ready: true, demo: true, value, progress: value / target, events: 400, rate: 42_000, codeRate: 3.2, lastEventAt: now - 4000, gardenInfo: { count: 9, autoPlanted: null },
-    settings: { mode: 'daily', manualStart: null, metric: 'weighted', target, codeTarget, layout: 'split', sources: { claude: true, codex: true, vscode: true } },
+    settings: { mode: 'daily', manualStart: null, metric: 'weighted', target, codeTarget, layout: 'split', sources: Object.fromEntries(SOURCE_IDS.map((id) => [id, true])) },
     metrics: { weighted: { label: 'Ağırlıklı', description: 'Önizleme', target } },
     season: { key: 'preview', start: now, label: 'Önizleme' },
     totals: { input: value * 0.01, output: value * 0.1, cacheWrite: value * 0.25, cacheRead: value * 6 },

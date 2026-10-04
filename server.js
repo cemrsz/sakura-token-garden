@@ -85,8 +85,8 @@ async function main() {
   console.log(`     Widget: ${result.url}/?mode=widget\n`);
   if (!options.demo) {
     for (const [source, item] of Object.entries(sakura.tracker.info())) {
-      const name = { claude: 'Claude Code', codex: 'Codex', vscode: 'VS Code' }[source] || source;
-      console.log(`     ${item.found ? '✓' : '·'} ${name.padEnd(12)} ${item.found ? item.dirs.join(', ') : 'bulunamadı'}`);
+      const name = { claude: 'Claude Code', chat: 'Claude sohbet', codex: 'Codex', vscode: 'VS Code' }[source] || source;
+      console.log(`     ${item.found ? '✓' : '·'} ${name.padEnd(14)} ${item.found ? item.dirs.join(', ') : 'bulunamadı'}`);
     }
     const snap = sakura.snapshot();
     console.log(`\n     ${sakura.tracker.events.length} token olayı okundu (${sakura.loadMs} ms). Bu sezon: ${snap.value.toLocaleString('tr-TR')} / ${snap.settings.target.toLocaleString('tr-TR')}\n`);

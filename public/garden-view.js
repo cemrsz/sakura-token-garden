@@ -32,7 +32,7 @@ function mulberry(seed) {
 }
 
 function fakeItems() {
-  const sources = ['claude', 'claude', 'codex', 'claude', 'vscode', 'codex', 'claude', 'vscode', 'claude'];
+  const sources = ['claude', 'chat', 'codex', 'claude', 'vscode', 'codex', 'chat', 'vscode', 'claude'];
   return sources.map((source, index) => ({
     id: index + 1, source, plantedAt: Date.now() - (sources.length - index) * 86400000, value: source === 'vscode' ? 250 : 5e6,
     target: source === 'vscode' ? 250 : 5e6, unit: source === 'vscode' ? 'lines' : 'tokens', seed: 1000 + index * 7919, auto: index % 3 === 0 ? 1 : 0,

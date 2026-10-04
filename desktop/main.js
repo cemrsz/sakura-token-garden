@@ -13,6 +13,7 @@ const ROOT = path.join(__dirname, '..');
 const ASSETS = path.join(__dirname, 'assets');
 const AI = {
   claude: { name: 'Claude Code', species: 'Sakura', emoji: '🌸', finale: 'Hanami' },
+  chat: { name: 'Claude', species: 'Ume', emoji: '💮', finale: 'Umemi' },
   codex: { name: 'Codex', species: 'Momiji', emoji: '🍁', finale: 'Momijigari' },
   vscode: { name: 'VS Code', species: 'Fuji', emoji: '🪻', finale: 'Fujimatsuri', lines: true },
 };

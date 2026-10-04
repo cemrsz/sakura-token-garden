@@ -3,7 +3,7 @@
 
 import { themeOf } from './themes.js';
 
-const TOKEN_IDS = ['claude', 'codex'];
+const TOKEN_IDS = ['claude', 'chat', 'codex'];
 const $ = (selector, root = document) => root.querySelector(selector);
 
 let options = { preview: false, getSnapshot: () => null };
@@ -28,7 +28,7 @@ const fmt = (value) => (unit === 'lines' ? full(value) : short(value));
 const unitWord = () => (unit === 'lines' ? 'satır' : 'token');
 const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-// Seçili birimde bir kovanın serileri: token → Claude + Codex, satır → VS Code.
+// Seçili birimde bir kovanın serileri: token → Claude Code + Claude + Codex, satır → VS Code.
 function series() {
   if (unit === 'lines') return [{ id: 'vscode', color: themeOf('vscode').chart, label: `${themeOf('vscode').emoji} VS Code`, value: (b) => b.lines }];
   return TOKEN_IDS.map((id) => ({ id, color: themeOf(id).chart, label: `${themeOf(id).emoji} ${themeOf(id).ai}`, value: (b) => b.tokens[id] || 0 }));
@@ -50,8 +50,9 @@ function fakeStats() {
   const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
   const bucket = (scale) => {
     const claude = Math.round(rnd() * 6e6 * scale);
+    const chat = Math.round(rnd() * 1.5e6 * scale);
     const codex = Math.round(rnd() * 3e6 * scale);
-    return { tokens: { claude, codex, total: claude + codex }, lines: Math.round(rnd() * 320 * scale), chars: 0, calls: Math.round(rnd() * 200 * scale) };
+    return { tokens: { claude, chat, codex, total: claude + chat + codex }, lines: Math.round(rnd() * 320 * scale), chars: 0, calls: Math.round(rnd() * 200 * scale) };
   };
   const days = Array.from({ length: 30 }, (_, i) => ({ key: `d${i}`, label: `${i + 5} Eyl`, weekday: 'Pzt', ...bucket(i % 7 === 5 ? 0.2 : 1) }));
   const weeks = Array.from({ length: 12 }, (_, i) => ({ key: `w${i}`, label: `${i + 1}. hafta`, range: `${i + 1}. hafta`, current: i === 11, ...bucket(6) }));
@@ -190,8 +191,10 @@ function render() {
   const s = data.summary;
   const backfill = data.backfill && data.backfill.running
     ? `<p class="hint progress-note">Geçmiş kayıtlar veritabanına aktarılıyor… ${data.backfill.done} / ${data.backfill.total} dosya</p>` : '';
+  // claude.ai sohbetleri yanıt metninden tahmin edilir; lejantta bunu belirtir.
+  const note = (id) => (id === 'chat' ? ' <small>(claude.ai tahmini + Cowork)</small>' : '');
   const legend = series().length > 1
-    ? `<div class="legend">${series().map((item) => `<span><i style="background:${item.color}"></i>${item.label}</span>`).join('')}</div>`
+    ? `<div class="legend">${series().map((item) => `<span><i style="background:${item.color}"></i>${item.label}${note(item.id)}</span>`).join('')}</div>`
     : `<div class="legend"><span><i style="background:${series()[0].color}"></i>${series()[0].label} · elle yazılan satır</span></div>`;
   const buckets = view === 'days' ? data.days : data.weeks;
   const width = Math.max(320, Math.round(body.clientWidth || 860));
