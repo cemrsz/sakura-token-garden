@@ -10,9 +10,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
+const { LineCounter } = require('./counter');
 
 const FLUSH_MS = 5000;
-const ENTER = /^(\r?\n[ \t]*){1,2}$/;
 
 function appDataDir() {
   const home = os.homedir();
@@ -29,7 +29,7 @@ function dayKey(ts = Date.now()) {
 
 function activate(context) {
   const windowId = crypto.createHash('sha1').update(vscode.env.sessionId || String(process.pid)).digest('hex').slice(0, 10);
-  const typedSinceEnter = new Map();
+  const documents = new Map(); // belge uri → LineCounter
   const pending = new Map();
   let counter = 0;
 
@@ -93,30 +93,17 @@ function activate(context) {
     if (document.uri.scheme !== 'file' && document.uri.scheme !== 'untitled') return;
     const reason = event.reason;
     if (reason === vscode.TextDocumentChangeReason.Undo || reason === vscode.TextDocumentChangeReason.Redo) return;
-    const minTyped = Math.max(1, config().get('minTypedChars', 2));
     const key = document.uri.toString();
-
-    for (const change of event.contentChanges) {
-      const text = change.text;
-      if (ENTER.test(text)) {
-        // Enter: imlecin solunda kalan kısım aynı satır numarasında durur.
-        const line = Math.min(change.range.start.line, document.lineCount - 1);
-        const content = document.lineAt(line).text;
-        if (content.trim().length > 0 && (typedSinceEnter.get(key) || 0) >= minTyped) record(document, 1, 0);
-        typedSinceEnter.set(key, 0);
-      } else if (text.length > 0 && text.length <= 2 && !/[\r\n]/.test(text) && change.rangeLength <= 2) {
-        // Tek tuş vuruşu (otomatik kapanan "()" çifti dahil).
-        const typed = text.replace(/\s/g, '').length;
-        if (typed) {
-          typedSinceEnter.set(key, (typedSinceEnter.get(key) || 0) + typed);
-          record(document, 0, typed);
-        }
-      }
-      // Daha büyük eklemeler (yapıştırma, AI tamamlama, snippet, biçimlendirme) sayılmaz.
-    }
+    let lineCounter = documents.get(key);
+    if (!lineCounter) documents.set(key, (lineCounter = new LineCounter()));
+    const result = lineCounter.apply(event.contentChanges, {
+      minTyped: Math.max(1, config().get('minTypedChars', 2)),
+      lineText: (line) => document.lineAt(Math.min(line, document.lineCount - 1)).text,
+    });
+    if (result.lines || result.chars) record(document, result.lines, result.chars);
   }));
 
-  context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((document) => typedSinceEnter.delete(document.uri.toString())));
+  context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((document) => documents.delete(document.uri.toString())));
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration('sakuraGarden')) renderStatus();
   }));
