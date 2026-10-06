@@ -1,8 +1,8 @@
 {
   "name": "sakura-code-garden",
   "displayName": "Sakura Kod Bahçesi",
-  "description": "Elle yazdığın kod satırlarını sayar; Sakura Token Bahçesi'nde Fuji (morsalkım) ağacını büyütür.",
-  "version": "1.0.0",
+  "description": "Elle yazdığın kod satırlarını sayar; yapıştırma, AI tamamlamaları ve ajan düzenlemeleri sayılmaz. Sakura Token Bahçesi'nde Fuji (morsalkım) ağacını büyütür.",
+  "version": "1.1.0",
   "publisher": "cemrsz",
   "license": "MIT",
   "icon": "icon.png",

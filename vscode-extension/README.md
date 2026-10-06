@@ -49,7 +49,7 @@ Ayarlar: `sakuraGarden.enabled`, `sakuraGarden.minTypedChars` (varsayılan 2).
 
 ## Geliştirme
 
-Karar mantığı [`counter.js`](counter.js)'te, VS Code'dan bağımsızdır. Depo kökünde:
+Karar mantığı `counter.js`'te, VS Code'dan bağımsızdır. Depo kökünde:
 
 - `npm test` — sayaç birim testleri ve gerçek bir VS Code oturumundan kaydedilmiş olayların yeniden oynatılması
 - `npm run test:vscode` — senaryoyu yalıtılmış gerçek bir VS Code penceresinde oynatır ve eklentinin kayıtlarını adım adım denetler
