@@ -103,6 +103,39 @@ test('üstte satır eklenip silinince yazılan satırın kaydı onunla birlikte 
   assert.equal(doc.lines, 1);
 });
 
+test('Copilot gibi satır içi AI tamamlaması kabul edilen satır sayılmaz', () => {
+  const doc = new Doc('    ');
+  doc.type('co');
+  // Gerçek VS Code'da satır içi önerinin kabulü, satırın başından imlece kadarını tek seferde değiştirir.
+  doc.insert([0, 0], '    const total = computeTotal(a, b);', [0, 6]);
+  doc.enter('    ');
+  assert.equal(doc.lines, 0);
+});
+
+test('elle yazılan satıra yapıştırılan parça satırı saydırmaz; snippet de sayılmaz', () => {
+  const doc = new Doc();
+  doc.type('const url = ');
+  doc.insert(doc.end, "'https://example.com/api';");
+  doc.enter();
+  const snippet = 'for (let i = 0; i < n; i++) {';
+  doc.insert(doc.end, `${snippet}\n\t\n}`);
+  doc.insert([1, snippet.length], '\n\t'); // snippet'in ilk satırının sonunda Enter
+  assert.equal(doc.lines, 0);
+});
+
+test('IntelliSense ile tamamlanan tek kelime ve otomatik kapanan etiket satırı bozmaz', () => {
+  const doc = new Doc();
+  doc.type('let el = docu');
+  doc.insert([0, 9], 'documentElement', [0, 13]);
+  doc.type(';');
+  doc.enter();
+  doc.type('<p>');
+  doc.insert(doc.end, '</p>');
+  doc.enter();
+  assert.equal(doc.text, 'let el = documentElement;\n<p></p>\n');
+  assert.equal(doc.lines, 2);
+});
+
 test('satır başında basılan Enter satırı aşağı iter; satır yine de sayılabilir', () => {
   const doc = new Doc();
   doc.type('ab');
