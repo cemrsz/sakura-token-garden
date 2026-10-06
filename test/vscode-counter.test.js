@@ -182,3 +182,31 @@ test('satır başında basılan Enter satırı aşağı iter; satır yine de say
   doc.enter();
   assert.equal(doc.lines, 1);
 });
+
+test('tuş vuruşu olamayan değişiklikler (geri al / yinele, çoklu imleç, arka plan) hiçbir şey saydırmaz', () => {
+  // Geri al + yinele + yeniden Enter aynı satırı ikinci kez saydırmaz.
+  const doc = new Doc();
+  doc.type('const a = 1;');
+  doc.enter();
+  assert.equal(doc.lines, 1);
+  doc.edit([change([0, 12], '', [1, 0])], { typing: false }); // geri al
+  doc.edit([change([0, 12], '\n')], { typing: false }); // yinele
+  doc.edit([change([0, 12], '', [1, 0])], { typing: false }); // tekrar geri al
+  doc.enter();
+  assert.equal(doc.lines, 1);
+
+  // Çoklu imleç: VS Code değişiklikleri aşağıdan yukarı tek olayda verir.
+  const multi = new Doc('\n');
+  for (const char of 'foo();') multi.edit([change([1, multi.end[1]], char), change([0, multi.end[1]], char)], { typing: false });
+  assert.equal(multi.text, 'foo();\nfoo();');
+  multi.edit([change([1, 6], '\n'), change([0, 6], '\n')], { typing: false });
+  assert.equal(multi.lines, 0);
+  assert.equal(multi.chars, 0);
+  // Çoklu imleçle başlanan satır, tek imleçle bitirilse de sayılmaz.
+  const single = new Doc();
+  single.type('x');
+  single.edit([change([0, 1], 'y')], { typing: false });
+  single.type('z();');
+  single.enter();
+  assert.equal(single.lines, 0);
+});

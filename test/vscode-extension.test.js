@@ -42,7 +42,7 @@ test('VS Code eklentisi yalnızca elle yazılan satırları sayar', async (t) =>
     ConfigurationTarget: { Global: 1 },
     env: { sessionId: 'oturum', openExternal: async () => {} },
     Uri: { parse: (value) => value },
-    window: { createStatusBarItem: () => ({ show() {}, dispose() {} }), showInformationMessage() {} },
+    window: { createStatusBarItem: () => ({ show() {}, dispose() {} }), showInformationMessage() {}, activeTextEditor: null },
     workspace: {
       name: 'demo',
       getWorkspaceFolder: () => ({ name: 'demo' }),
@@ -77,6 +77,8 @@ test('VS Code eklentisi yalnızca elle yazılan satırları sayar', async (t) =>
   t.after(dispose);
 
   const document = fakeDocument(['']);
+  const editor = { document, selections: [{}] };
+  vscode.window.activeTextEditor = editor;
   const type = (text, line) => {
     for (const char of text) {
       const character = document.lines[line].length;
@@ -110,6 +112,16 @@ test('VS Code eklentisi yalnızca elle yazılan satırları sayar', async (t) =>
   insert(5, 'function x() {\n  return 1;\n}');
   type('x', 7); type('y', 7);
   enter(7, vscode.TextDocumentChangeReason.Undo);
+  // 5) Çoklu imleçle yazılan satır → sayılmaz.
+  editor.selections = [{}, {}];
+  type('ab();', 8); enter(8);
+  editor.selections = [{}];
+  // 6) Etkin olmayan bir belgeye gelen değişiklikler (ör. ajanın arka planda düzenlediği dosya) → sayılmaz.
+  vscode.window.activeTextEditor = { document: fakeDocument(['']), selections: [{}] };
+  type('cd();', 9); enter(9);
+  vscode.window.activeTextEditor = editor;
+  // 7) Yeniden elle yazılan satır → sayılır.
+  type('ok();', 10); enter(10);
 
   dispose();
 
@@ -117,8 +129,8 @@ test('VS Code eklentisi yalnızca elle yazılan satırları sayar', async (t) =>
   const records = fs.readdirSync(dir).flatMap((file) => fs.readFileSync(path.join(dir, file), 'utf8').trim().split('\n').map((line) => JSON.parse(line)));
   const lines = records.reduce((sum, record) => sum + record.lines, 0);
   const chars = records.reduce((sum, record) => sum + record.chars, 0);
-  assert.equal(lines, 2);
-  assert.equal(chars, 'const a = 1;'.replace(/\s/g, '').length + 'let b = a;'.replace(/\s/g, '').length + 2);
+  assert.equal(lines, 3);
+  assert.equal(chars, 'const a = 1;let b = a;xyok();'.replace(/\s/g, '').length);
   assert.equal(records[0].project, 'demo');
   assert.equal(records[0].language, 'javascript');
 

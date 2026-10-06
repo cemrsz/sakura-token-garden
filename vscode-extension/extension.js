@@ -2,8 +2,9 @@
 // Sakura Kod Bahçesi — VS Code eklentisi.
 // Elle yazılan kod satırlarını sayar ve Sakura Token Bahçesi'nin okuduğu yerel kayıt
 // dosyasına ekler. Bir satır, ancak o satırda gerçekten tuşa basılarak yazılmış ve
-// Enter ile bitirilmişse sayılır; yapıştırma, AI/Copilot tamamlamaları, snippet,
-// biçimlendirme, geri al / yinele sayılmaz. Uygulama kapalıyken de kayıt tutulur.
+// Enter ile bitirilmişse sayılır; yapıştırma, AI/Copilot tamamlamaları, ajanların
+// düzenlemeleri, snippet, biçimlendirme, geri al / yinele sayılmaz (kurallar: counter.js).
+// Uygulama kapalıyken de kayıt tutulur.
 
 const vscode = require('vscode');
 const fs = require('fs');
@@ -92,11 +93,18 @@ function activate(context) {
     const document = event.document;
     if (document.uri.scheme !== 'file' && document.uri.scheme !== 'untitled') return;
     const reason = event.reason;
-    if (reason === vscode.TextDocumentChangeReason.Undo || reason === vscode.TextDocumentChangeReason.Redo) return;
+    // Tuş vuruşu ancak kullanıcının önündeki düzenleyicide, tek imleçle olur. Geri al / yinele,
+    // çoklu imleç ve arka plandaki belgelere gelen değişiklikler (ör. bir ajanın başka bir
+    // sekmedeki dosyayı düzenlemesi) yine işlenir ki satır numaraları kaysın, ama hiçbir şey saymaz.
+    const editor = vscode.window.activeTextEditor;
+    const typing = reason !== vscode.TextDocumentChangeReason.Undo
+      && reason !== vscode.TextDocumentChangeReason.Redo
+      && !!editor && editor.document === document && editor.selections.length === 1;
     const key = document.uri.toString();
     let lineCounter = documents.get(key);
     if (!lineCounter) documents.set(key, (lineCounter = new LineCounter()));
     const result = lineCounter.apply(event.contentChanges, {
+      typing,
       minTyped: Math.max(1, config().get('minTypedChars', 2)),
       lineText: (line) => document.lineAt(Math.min(line, document.lineCount - 1)).text,
     });

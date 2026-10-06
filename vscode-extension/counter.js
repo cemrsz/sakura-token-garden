@@ -4,6 +4,8 @@
 // onDidChangeTextDocument olaylarını ona verir. Böylece karar mantığı VS Code olmadan test edilir.
 //
 // Bir satır, Enter ile bitirildiğinde şu koşulların hepsi sağlanıyorsa sayılır:
+//   • Enter ve satırdaki karakterler kullanıcının etkin düzenleyicide, tek imleçle bastığı
+//     tuşlardır (geri al / yinele, çoklu imleç ve arka plandaki belgeler hiçbir şey saydırmaz);
 //   • satıra yapıştırma, AI tamamlaması, snippet ya da ajan düzenlemesi girmemiştir;
 //   • satırda en az minTyped karakter tuşla yazılmıştır (başka satırlarda yazılanlar sayılmaz);
 //   • satırın en az yarısı tuşla yazılmıştır (IntelliSense'in tamamladığı kelimeler hariç).
@@ -90,9 +92,12 @@ class LineCounter {
   }
 
   // changes: onDidChangeTextDocument'ın contentChanges dizisi ({ range, rangeLength, text }).
+  // typing: değişiklik kullanıcının tuş vuruşu olabilir mi? Eklenti, geri al / yinele, çoklu
+  //   imleç ve etkin olmayan belgeler için false verir: o zaman hiçbir şey sayılmaz ve eklenen
+  //   metin dışarıdan gelmiş sayılır.
   // lineText(line): olay uygulandıktan sonra o satırın metni.
   // Dönüş: bu olayla sayılan satırlar ve tuşla yazılan (boşluk dışı) karakterler.
-  apply(changes, { lineText, minTyped = 2 }) {
+  apply(changes, { lineText, typing = true, minTyped = 2 }) {
     let lines = 0;
     let chars = 0;
     // Aşağıdan yukarı: bir değişiklik yalnızca kendisinden sonraki satırların numarasını kaydırır.
@@ -103,22 +108,22 @@ class LineCounter {
       const kind = kindOf(change);
       if (kind === 'enter') {
         // Enter: imlecin solunda kalan kısım aynı satır numarasında durur.
-        if (this.owns(line, lineText(line), minTyped)) lines += 1;
+        if (typing && this.owns(line, lineText(line), minTyped)) lines += 1;
         // Satır başındaki Enter satırı aşağı iter; o satırın kaydı kayarak onunla gider.
         if (!wholeLines(change)) this.lines.delete(line);
-      } else if (kind === 'key') {
+      } else if (kind === 'key' && typing) {
         // Seçili metnin üstüne yazmak ya da otomatik kapanan ")" üstünden geçmek, yerine gelen
         // karakterler kadar tuşla yazılanı düşürür.
         const entry = this.stats(line);
         const typed = visible(change.text);
         entry.typed = Math.max(0, entry.typed - (singleLine ? change.rangeLength : 0)) + typed;
         chars += typed;
-      } else if (kind === 'completion') {
+      } else if (kind === 'completion' && typing) {
         this.stats(line).assisted += Math.max(0, visible(change.text) - change.rangeLength);
       } else if (kind === 'delete' && singleLine) {
         const entry = this.lines.get(line);
         if (entry) entry.typed = Math.max(0, entry.typed - change.rangeLength);
-      } else if (kind === 'insert' && !wholeLines(change)) {
+      } else if (kind !== 'delete' && kind !== 'space' && !wholeLines(change)) {
         // Var olan satıra dışarıdan metin girdi. (Satır başına eklenen bütün satırlar yeni
         // satırlardır; kaydı olmadığı için zaten sayılamazlar.)
         this.stats(line).foreign = true;
