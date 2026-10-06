@@ -3,15 +3,20 @@
 // vscode modülüne bağlı değildir: eklenti her belge için bir LineCounter tutar ve
 // onDidChangeTextDocument olaylarını ona verir. Böylece karar mantığı VS Code olmadan test edilir.
 //
-// Tuşla yazılan karakterler satır satır tutulur: Enter'a basılan satırın kendisinde yeterince
-// yazılmamışsa, belgenin başka bir yerinde yazılanlar onu sayılır hale getirmez. Satıra bir kez
-// yapıştırma, AI tamamlaması, snippet ya da ajan düzenlemesi girerse o satır artık sayılmaz.
+// Bir satır, Enter ile bitirildiğinde şu koşulların hepsi sağlanıyorsa sayılır:
+//   • satıra yapıştırma, AI tamamlaması, snippet ya da ajan düzenlemesi girmemiştir;
+//   • satırda en az minTyped karakter tuşla yazılmıştır (başka satırlarda yazılanlar sayılmaz);
+//   • satırın en az yarısı tuşla yazılmıştır (IntelliSense'in tamamladığı kelimeler hariç).
+//     Ajanın yazdığı bir satırın sonuna birkaç harf eklemek o satırı sahiplendirmez.
+// Silinen karakterler tuşla yazılanlardan düşülür; yazıp silmek satırı saydırmaz.
 
 const ENTER = /^(\r?\n[ \t]*){1,2}$/;
 // IntelliSense'in tamamladığı tek kelime (ör. "documentElement", "this.items", "log()") ya da
 // otomatik kapanan etiket ("</div>"). Ne tuşla yazılmış ne de dışarıdan gelmiş sayılır.
 const COMPLETION = /^(?:[\p{L}\p{N}_$.]+(?:\(\))?|<\/[\w.:-]+>)$/u;
 const MAX_COMPLETION = 48;
+// Satırın (tamamlanan kelimeler hariç) en az bu kadarı tuşla yazılmış olmalı.
+const TYPED_SHARE = 0.5;
 const MAX_TRACKED = 200;
 
 const visible = (text) => text.replace(/\s/g, '').length;
@@ -35,17 +40,26 @@ function kindOf({ text }) {
 
 class LineCounter {
   constructor() {
-    this.lines = new Map(); // satır numarası → { typed, foreign }
+    this.lines = new Map(); // satır numarası → { typed, assisted, foreign }
   }
 
   stats(line) {
     let entry = this.lines.get(line);
     if (!entry) {
-      entry = { typed: 0, foreign: false };
+      entry = { typed: 0, assisted: 0, foreign: false };
       this.lines.set(line, entry);
       if (this.lines.size > MAX_TRACKED) this.lines.delete(this.lines.keys().next().value);
     }
     return entry;
+  }
+
+  // Enter'a basılan satır elle yazılmış sayılır mı?
+  owns(line, text, minTyped) {
+    const entry = this.lines.get(line);
+    const total = visible(text);
+    if (!entry || entry.foreign || !total) return false;
+    const typed = Math.min(entry.typed, total);
+    return typed >= minTyped && typed >= TYPED_SHARE * Math.max(0, total - entry.assisted);
   }
 
   // Satır ekleyen ya da silen bir değişiklikten sonra izlenen satırların numaralarını kaydırır.
@@ -55,14 +69,24 @@ class LineCounter {
     const removed = end.line - start.line;
     if (!added && !removed) return;
     const whole = wholeLines(change);
+    // Satır sonunda Delete ya da satır başında Backspace: alttaki satır üsttekine katılır.
+    const join = !whole && !change.text && removed === 1 && end.character === 0;
     const first = whole ? start.line : start.line + 1;
     const next = new Map();
+    let joined = null;
     for (const [line, entry] of this.lines) {
       if (line < first) next.set(line, entry);
       else if (line > end.line || (whole && line === end.line)) next.set(line + added - removed, entry);
-      // Arada kalan satırlar değişikliğin içinde kayboldu.
+      else if (join) joined = entry;
+      // Arada kalan diğer satırlar değişikliğin içinde kayboldu.
     }
     this.lines = next;
+    if (joined) {
+      const target = this.stats(start.line);
+      target.typed += joined.typed;
+      target.assisted += joined.assisted;
+      target.foreign = target.foreign || joined.foreign;
+    }
   }
 
   // changes: onDidChangeTextDocument'ın contentChanges dizisi ({ range, rangeLength, text }).
@@ -75,17 +99,25 @@ class LineCounter {
     const ordered = [...changes].sort((a, b) => b.range.start.line - a.range.start.line || b.range.start.character - a.range.start.character);
     for (const change of ordered) {
       const line = change.range.start.line;
+      const singleLine = change.range.end.line === line;
       const kind = kindOf(change);
       if (kind === 'enter') {
         // Enter: imlecin solunda kalan kısım aynı satır numarasında durur.
-        const entry = this.lines.get(line);
-        if (entry && !entry.foreign && entry.typed >= minTyped && lineText(line).trim().length > 0) lines += 1;
+        if (this.owns(line, lineText(line), minTyped)) lines += 1;
         // Satır başındaki Enter satırı aşağı iter; o satırın kaydı kayarak onunla gider.
         if (!wholeLines(change)) this.lines.delete(line);
-      } else if (kind === 'key' && change.rangeLength <= 2) {
+      } else if (kind === 'key') {
+        // Seçili metnin üstüne yazmak ya da otomatik kapanan ")" üstünden geçmek, yerine gelen
+        // karakterler kadar tuşla yazılanı düşürür.
+        const entry = this.stats(line);
         const typed = visible(change.text);
-        this.stats(line).typed += typed;
+        entry.typed = Math.max(0, entry.typed - (singleLine ? change.rangeLength : 0)) + typed;
         chars += typed;
+      } else if (kind === 'completion') {
+        this.stats(line).assisted += Math.max(0, visible(change.text) - change.rangeLength);
+      } else if (kind === 'delete' && singleLine) {
+        const entry = this.lines.get(line);
+        if (entry) entry.typed = Math.max(0, entry.typed - change.rangeLength);
       } else if (kind === 'insert' && !wholeLines(change)) {
         // Var olan satıra dışarıdan metin girdi. (Satır başına eklenen bütün satırlar yeni
         // satırlardır; kaydı olmadığı için zaten sayılamazlar.)

@@ -136,6 +136,44 @@ test('IntelliSense ile tamamlanan tek kelime ve otomatik kapanan etiket satırı
   assert.equal(doc.lines, 2);
 });
 
+test('ajanın yazdığı satırın sonuna birkaç harf eklemek o satırı sahiplendirmez', () => {
+  const doc = new Doc('const fromAgent = computeSomething(a, b)');
+  doc.type(';');
+  doc.type(' ok');
+  doc.enter();
+  assert.equal(doc.lines, 0);
+});
+
+test('yazıp silmek satırı saydırmaz', () => {
+  const doc = new Doc('const fromAgent = computeSomething(a, b);');
+  const end = doc.end[1];
+  doc.type(' // '.padEnd(40, 'x'));
+  for (let index = 0; index < 40; index += 1) doc.edit([change([0, doc.end[1] - 1], '', doc.end)]);
+  assert.equal(doc.end[1], end);
+  doc.enter();
+  assert.equal(doc.lines, 0);
+});
+
+test('yazım hatası düzeltmek, seçili kelimenin üstüne yazmak ve satır birleştirmek sayımı bozmaz', () => {
+  const doc = new Doc();
+  doc.type('cosnt');
+  for (let index = 0; index < 3; index += 1) doc.edit([change([0, doc.end[1] - 1], '', doc.end)]);
+  doc.type('nst value = 1;');
+  doc.insert([0, 6], 'n', [0, 11]); // "value" seçilip üstüne yazılır
+  doc.insert([0, 7], 'a'); doc.insert([0, 8], 'm'); doc.insert([0, 9], 'e');
+  assert.equal(doc.text, 'const name = 1;');
+  doc.enter();
+  assert.equal(doc.lines, 1);
+
+  // Ajanın bıraktığı "foo(" satırına, alttaki satırda yazılan argümanlar Delete ile katılır.
+  const other = new Doc('foo(\n');
+  other.type('a, b);');
+  other.insert([0, 4], '', [1, 0]);
+  assert.equal(other.text, 'foo(a, b);');
+  other.enter();
+  assert.equal(other.lines, 1);
+});
+
 test('satır başında basılan Enter satırı aşağı iter; satır yine de sayılabilir', () => {
   const doc = new Doc();
   doc.type('ab');
