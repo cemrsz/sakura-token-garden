@@ -230,3 +230,60 @@ sohbet başlıklarını bozacaktı. Düzeltildi ve bunu yakalayan bir test eklen
 - `dist/` yalnızca 1.2.0 dosyalarını içeriyor; 1.1.0 dosyaları GitHub'daki v1.1.0 sürümünde duruyor.
 - "Windows açılışında başlat" önceden kapalıydı, kapalı bırakıldı (tepsideki 🌸 menüsünden açılabilir).
 - Tarayıcı eklentisini Chrome'a ben kurmadım: Geliştirici modunu açmak tarayıcının güvenlik ayarı; adımlar 9.6'da.
+
+---
+
+## 10. Güncelleme (6 Ekim 2026) — Fuji gerçekten yalnızca elle yazılan satırlarla büyüyor
+
+Fuji projenin asıl motivasyonu: ajanlar kendi ağaçlarını token harcayarak büyütürken Fuji'yi büyütmenin tek yolu
+kod yazmak olmalı. Eklentiyi bu iddiaya karşı gerçek VS Code'da denedim; iddia **tutmuyordu**.
+
+### 10.1 Bulunan açıklar (VS Code eklentisi 1.0.0)
+Tuşla yazılan karakterler satır başına değil **belge başına** tutuluyordu; Enter'a basılan satırın kendisine bakılmıyordu.
+Gerçek VS Code 1.140'ta aynı senaryo (`npm run test:vscode`) eski eklentiyle 8 satır saydı, doğrusu 4:
+
+| Senaryo | 1.0.0 | 1.1.0 | Doğru |
+|---|---|---|---|
+| Elle yazılan satırlar (3 adım) | 3 | 3 | 3 |
+| IntelliSense ile tamamlanan kelime | 1 | 1 | 1 |
+| `co` yazıp satır içi AI önerisini (Copilot'un API'si) kabul etmek | **1** | 0 | 0 |
+| Çoklu imleçle yazılan satırlar | **1** | 0 | 0 |
+| Ajanın yazdığı satırın sonuna iki harf ekleyip Enter | **1** | 0 | 0 |
+| Ajanın arka plandaki belgeyi düzenlemesi | **1** | 0 | 0 |
+| Yapıştırma · geri al / yinele · snippet · ajanın satır eklemesi · diskten yeniden yükleme | 0 | 0 | 0 |
+| **Toplam** | **8** | **4** | **4** |
+
+### 10.2 Yeni kurallar (`vscode-extension/counter.js`)
+Bir satır, Enter ile bitirildiğinde şunların hepsi doğruysa sayılır:
+- Değişiklik kullanıcının **etkin düzenleyicide, tek imleçle** bastığı tuşlardır. Geri al / yinele, çoklu imleç ve
+  arka plandaki belgelere gelen değişiklikler hiçbir şey saydırmaz; satır numaraları kaysın diye yine işlenir.
+- Satıra **yapıştırma, AI tamamlaması, snippet ya da ajan düzenlemesi girmemiştir.**
+- Satırın **en az yarısı** tuşla yazılmıştır (IntelliSense'in tamamladığı tek kelimeler hariç tutulur).
+- Satırda tuşla yazılmış en az 2 karakter vardır. Silinen ve üstüne yazılan karakterler düşülür.
+
+Karar mantığı VS Code'dan bağımsız bir modüle taşındı; her satırın kaydı, üstte satır eklenip silindikçe satırıyla
+birlikte kayar. Yazım hatası düzeltmek, seçili kelimenin üstüne yazmak, otomatik kapanan parantezler ve
+Backspace/Delete ile satır birleştirmek elle yazılan satırı bozmaz.
+
+### 10.3 Doğrulama
+| Kontrol | Sonuç |
+|---|---|
+| `npm test` | ✅ 53/53 (14 yeni sayaç testi; düzeltilen her açığın testi bir önceki sürümde kalıyor) |
+| Gerçek VS Code oturumunun olay kaydının yeniden oynatılması (`test/fixtures/vscode-real-session.json`, 65 olay) | ✅ 4 satır; benzeticideki metin VS Code'daki metinle birebir aynı |
+| `npm run test:vscode` — kaynaktan yüklenen eklenti, gerçek VS Code 1.140 | ✅ 13/13 adım |
+| Aynı senaryo, paketlenmiş `sakura-code-garden-1.1.0.vsix` ile | ✅ 13/13 adım |
+| Bu bilgisayardaki VS Code'a kurulum | ✅ `cemrsz.sakura-code-garden@1.1.0` (önceden 1.0.0) |
+
+Gerçek senaryo yalıtılmış bir VS Code penceresinde çalışır (ayrı kullanıcı ve eklenti klasörü, kayıtlar geçici klasöre);
+senin VS Code ayarlarına ve Fuji kayıtlarına dokunmaz.
+
+**Doğrulayamadıklarım:**
+- **Gerçek Copilot.** Copilot'un kullandığı satır içi öneri API'si (`InlineCompletionItemProvider`) aynen kullanıldı;
+  kabul edilen öneri VS Code'da satırı tek bir değişiklikle yazdığı için Copilot'tan gelenle aynı olay oluşuyor.
+- **Bilerek kandırmak** mümkün: AI'ın önerdiği satırı harf harf elle yeniden yazmak sayılır, çünkü bu gerçekten yazmaktır.
+  IntelliSense'in tek kelimelik tamamlamaları da (bir AI aracının tek kelimelik önerisi gibi) tarafsız sayılır.
+
+### 10.4 Kullanmak için
+- VS Code'daki eklenti 1.1.0'a güncellendi. Açık VS Code pencerelerini bir kez yeniden yükle (*Developer: Reload Window*).
+- Başka bir bilgisayarda: `code --install-extension vscode-extension/sakura-code-garden-1.1.0.vsix`.
+- Masaüstü uygulaması değişmedi (1.2.0); yalnızca ayarlar ekranındaki açıklama metni güncellendi, bir sonraki pakete girecek.

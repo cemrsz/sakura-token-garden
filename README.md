@@ -10,6 +10,10 @@ Her kaynak kendi ağaç türünü büyütür:
 | **Codex** | 🍁 **Momiji** — Japon akçaağacı | token | *Momijigari* |
 | **VS Code** | 🪻 **Fuji** — morsalkım | elle yazılan kod satırı | *Fujimatsuri* |
 
+**Fuji projenin asıl motivasyonu:** ajanlar kendi ağaçlarını token harcayarak büyütürken Fuji yalnızca elle
+yazdığın satırlarla büyür. Yapıştırma, AI tamamlamaları ve ajanların düzenlemeleri sayılmaz; Fuji'yi büyütmenin
+tek yolu kod yazmak.
+
 Tohumdan başlar, filizlenir, dallanır, yapraklanır ve hedefe ulaşınca tam çiçeğe durur.
 Tamamlanan ağacı **Bahçem**'e dikersin; yerine yeni bir tohum büyümeye başlar.
 Token ve satır geçmişin bilgisayarındaki bir veritabanında **günlük ve haftalık** tutulur.
@@ -33,13 +37,16 @@ GitHub'da *Releases* sayfasında da var. Eski sürüm açıksa önce tepsideki �
 ### VS Code eklentisi (kod satırları için)
 
 ```bash
-code --install-extension vscode-extension/sakura-code-garden-1.0.0.vsix
+code --install-extension vscode-extension/sakura-code-garden-1.1.0.vsix
 ```
 
 Kurduktan sonra VS Code penceresini yeniden yükle (*Developer: Reload Window*). Durum çubuğunda `🪻 N satır` görünür.
 
-**Sayılan:** o satırda gerçekten tuşa basarak yazıp Enter ile bitirdiğin satırlar.
-**Sayılmayan:** yapıştırma, Copilot/AI tamamlama ve düzenlemeleri, snippet'ler, otomatik biçimlendirme, geri al / yinele, boş satırlar.
+**Sayılan:** önündeki düzenleyicide, tek imleçle tuşa basarak yazıp Enter ile bitirdiğin satırlar. Satırın en az
+yarısı tuşla yazılmış olmalı; IntelliSense'in tamamladığı tek kelimeler satırı bozmaz.
+**Sayılmayan:** yapıştırma, Copilot/AI satır içi önerileri, snippet'ler, ajanların düzenlemeleri (diskten yeniden
+yükleme, `WorkspaceEdit`, arka plandaki belgeler), ajanın yazdığı satırın sonuna birkaç harf eklemek, yazıp silmek,
+geri al / yinele, çoklu imleç, boş satırlar. Ayrıntılar: [vscode-extension/README.md](vscode-extension/README.md).
 Uygulama kapalıyken de sayar; açınca okunur. Cursor için: `cursor --install-extension …vsix`.
 
 ### Tarayıcı eklentisi (claude.ai sohbetleri için)
@@ -106,7 +113,7 @@ ve `garden` tablolarını sorgulayabilirsin.
 
 - **Claude Code** yanıt başına `usage` yazar; aynı yanıt her içerik bloğu için tekrarlandığından `message.id + requestId` ile tekilleştirilir.
 - **Codex** kümülatif `token_count` yazar; ardışık farklar alınır, resume ile devralınan toplam sayılmaz.
-- **VS Code eklentisi** elle yazılan satırları 5 sn'de bir yerel JSONL dosyasına ekler.
+- **VS Code eklentisi** her satırda tuşla yazılan, tamamlanan ve dışarıdan giren karakterleri ayrı tutar (`vscode-extension/counter.js`); Enter'da satırın elle yazılıp yazılmadığına karar verir ve sayılanları 5 sn'de bir yerel JSONL dosyasına ekler.
 - **Cowork** oturumları Claude Code biçiminde transcript yazar; aynı çözümleyiciyle okunur ama Ume ağacını büyütür.
 - **Tarayıcı eklentisi** her claude.ai yanıtını ölçüp yerel sunucuya yollar; sunucu doğrulayıp `claude-web/` klasörüne günlük JSONL olarak yazar. Ölçüm kimliğiyle tekilleştirilir, uygulama kapalıyken eklentide bekler.
 
@@ -142,7 +149,7 @@ Kod hedefi (VS Code): **50 · 100 · 250 · 1000 · 5000** satır (varsayılan 2
 
 ```
 desktop/            Electron: pencereler, tepsi, bildirim, ikon üretimi
-vscode-extension/   VS Code eklentisi (elle yazılan satırlar)
+vscode-extension/   VS Code eklentisi (elle yazılan satırlar; karar mantığı counter.js)
 browser-extension/  Tarayıcı eklentisi (claude.ai yanıt akışı → Ume)
 lib/parsers.js      Claude Code / claude.ai / Codex / VS Code satır → olay (tekil id)
 lib/tracker.js      Okuyucular (Claude Code, claude.ai, Cowork, Codex, VS Code), dosya kuyruğu, geçmiş aktarımı
@@ -154,14 +161,15 @@ lib/app-server.js   HTTP + SSE sunucu
 public/themes.js    Sakura / Ume / Momiji / Fuji temaları
 public/tree.js      Prosedürel bahçe (canvas)
 public/app.js       Arayüz · public/stats.js İstatistikler · public/garden-view.js Bahçem
-test/               node:test (39 test)
+test/               node:test (53 test) · test/vscode-real: gerçek VS Code senaryosu
 ```
 
 ## Geliştirme
 
 ```bash
 npm install        # yalnızca masaüstü paketleme için (Electron)
-npm test           # 39 test
+npm test           # 53 test
+npm run test:vscode # Fuji sayacını yalıtılmış gerçek bir VS Code penceresinde dener
 npm run app        # masaüstü uygulaması (kaynaktan)
 npm run dist       # kurulum dosyası → dist/
 npm run icons      # ikonları yeniden üret (yalnızca eklenti: npx electron desktop/make-icons.js --browser)
