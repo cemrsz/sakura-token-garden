@@ -210,3 +210,19 @@ test('tuş vuruşu olamayan değişiklikler (geri al / yinele, çoklu imleç, ar
   single.enter();
   assert.equal(single.lines, 0);
 });
+
+// test/vscode-real/run.js gerçek VS Code'da elle yazma, yapıştırma, IntelliSense, satır içi AI önerisi,
+// geri al / yinele, snippet, çoklu imleç ve ajan düzenlemelerini oynatıp tüm olayları kaydetti.
+// Kayıt aynen yeniden oynatılır; tuş vuruşu kararı eklentidekiyle aynıdır (extension.js).
+test('gerçek VS Code oturumunun olayları yeniden oynatılınca yalnızca elle yazılan 4 satır sayılır', () => {
+  const session = require('./fixtures/vscode-real-session.json');
+  const docs = Object.fromEntries(Object.entries(session.initial).map(([name, text]) => [name, new Doc(text)]));
+  for (const event of session.events) {
+    const typing = event.reason !== 1 && event.reason !== 2 && event.active && event.selections === 1;
+    const changes = event.changes.map(({ range: [line, character, endLine, endCharacter], text }) => change([line, character], text, [endLine, endCharacter]));
+    docs[event.doc].edit(changes, { typing });
+  }
+  for (const [name, text] of Object.entries(session.final)) assert.equal(docs[name].text, text, `${name} benzeticide aynı metne ulaşmalı`);
+  const counted = Object.values(docs).reduce((sum, doc) => sum + doc.lines, 0);
+  assert.equal(counted, session.expected);
+});

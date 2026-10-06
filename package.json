@@ -20,7 +20,8 @@
     "demo": "node server.js --demo --open --port 4880",
     "icons": "electron desktop/make-icons.js",
     "dist": "electron-builder --win",
-    "test": "node --test test/parsers.test.js test/garden.test.js test/db.test.js test/tracker.test.js test/vscode-counter.test.js test/vscode-extension.test.js test/server.test.js test/browser-extension.test.js"
+    "test": "node --test test/parsers.test.js test/garden.test.js test/db.test.js test/tracker.test.js test/vscode-counter.test.js test/vscode-extension.test.js test/server.test.js test/browser-extension.test.js",
+    "test:vscode": "node test/vscode-real/run.js"
   },
   "devDependencies": {
     "electron": "^44.5.1",
