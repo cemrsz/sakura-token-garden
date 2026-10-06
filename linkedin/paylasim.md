@@ -1,26 +1,32 @@
-Yapay zekâ ajanlarım bir günde kaç token harcıyor? Hiç görmüyordum. Artık masaüstümde bir ağaç olarak büyüyor. 🌸
+Yapay zekâ ajanlarım bir günde kaç token harcıyor, ben kendim kaç satır kod yazıyorum? Hiç görmüyordum.
+Artık ikisi de masaüstümde birer ağaç olarak büyüyor. 🌸
 
-Sakura Token Bahçesi'ni geliştirdim: Claude, Claude Code, Codex ve VS Code'da çalıştıkça yavaşça büyüyen ağaçlardan oluşan bir masaüstü uygulaması.
+Yeni yan projem Sakura Token Bahçesi: Claude Code, Claude, Codex ve VS Code'da çalıştıkça yavaşça büyüyen ağaçlardan oluşan bir masaüstü uygulaması.
 
-Nasıl çalışıyor?
-🌸 Claude Code token harcadıkça bir Sakura büyüyor
-💮 claude.ai'de sohbet ettikçe yanında bir Ume (erik çiçeği) açıyor; küçük bir tarayıcı eklentisi yanıtları ölçüyor
-🍁 Codex çalışınca yanına bir Momiji (Japon akçaağacı) dikiliyor
-🪻 VS Code'da elle yazdığım her satır bir Fuji'yi (morsalkım) besliyor; yapıştırma ve AI tamamlamaları sayılmıyor
+Her aracın kendi ağacı var:
+🌸 Claude Code → Sakura (kiraz çiçeği)
+💮 Claude sohbetleri → Ume (erik çiçeği)
+🍁 Codex → Momiji (Japon akçaağacı)
+🪻 VS Code → Fuji (morsalkım)
 
-Her ağaç 12 evreden geçiyor: tohum → filiz → dallar → yapraklar → tomurcuklar → tam çiçek. Harcanan her token ağaca uçan küçük bir ışık tanesi olarak görünüyor. Hedefe ulaşan ağacı "Bahçem"e dikiyorum, yerine yeni bir tohum büyümeye başlıyor; zamanla tamamlanan günlerden küçük bir bahçe oluşuyor.
+Fuji projenin asıl motivasyon kısmı. Bu ağaç yalnızca elle yazdığım satırlarla büyüyor; yapıştırma ve AI tamamlamaları sayılmıyor. Ajanlarım ağaçlarını büyütürken Fuji'yi büyütmenin tek yolu kod yazmak. 😄
 
-Arka planda:
-• Ajanların bilgisayara zaten yazdığı kayıtları canlı okuyor; API anahtarı yok, hiçbir veri bilgisayardan çıkmıyor
-• Günlük ve haftalık geçmiş yerel bir SQLite veritabanında; nisandan bu yana 12.000'den fazla kayıt birkaç saniyede içeri aktarıldı
-• Ağaçlar tamamen kodla çiziliyor (Canvas), tek bir görsel dosyası yok
-• Electron masaüstü uygulaması: sistem tepsisi, her zaman üstte duran widget, hedef bildirimleri
-• Node.js, Electron, VS Code ve tarayıcı eklentisi API'leri, 39 otomatik test
+Bunu gerçekten sağlamak beklediğimden zor çıktı. İlk sürümde Copilot'un önerisini kabul etmek, ajanın yazdığı bir satırın sonuna iki harf eklemek ya da çoklu imleçle yazmak da sayılıyordu. Artık her satırın ne kadarının tuşla yazıldığı ayrı ayrı tutuluyor ve sayaç, gerçek bir VS Code içinde otomatik bir senaryoyla test ediliyor.
 
-Bir de içgörü: son 30 günde ajanlarım 2,9 milyon çıktı tokenı üretmiş; bu hafta geçen haftaya göre %48 daha fazla. Görmeden hiç fark etmemiştim. 😄
+Harcanan tokenlar ağaca uçan küçük ışık taneleri olarak görünüyor. Ağaç tohumdan tam çiçeğe 12 evreden geçiyor. Hedefe ulaşınca onu "Bahçem"e dikiyorum, yerine yeni bir tohum başlıyor. Günler geçtikçe küçük bir bahçe oluşuyor.
 
-Siz AI araçlarınızın ne kadar "çalıştığını" takip ediyor musunuz?
+Teknik tarafı:
+→ API anahtarı ya da hook yok; ajanların zaten diske yazdığı kayıtları canlı okuyor
+→ Hiçbir veri bilgisayardan çıkmıyor, sunucu yalnızca 127.0.0.1'i dinliyor
+→ Geçmiş yerel bir SQLite veritabanında; nisandan bu yana 12.000'den fazla kayıt birkaç saniyede içe aktarıldı
+→ Ağaçların hepsi kodla çiziliyor (Canvas), tek bir görsel dosyası yok
+→ Electron masaüstü uygulaması ve widget, VS Code eklentisi, claude.ai yanıtlarını ölçen bir tarayıcı eklentisi
+→ Node.js, 53 otomatik test ve gerçek VS Code'da uçtan uca bir senaryo
 
-🔗 GitHub: [link]
+Son 30 günde ajanlarım 2,9 milyon çıktı tokenı üretmiş. Sayı olarak hiç dikkatimi çekmemişti; ağaç olarak görünce insan bir duruyor.
 
-#YapayZeka #ClaudeCode #Codex #VSCode #Electron #NodeJS #YanProje #VeriGörselleştirme #YazılımGeliştirme
+Ajanlar bu kadar çok yazarken, siz bugün elle kaç satır kod yazdınız? 🌳
+
+🔗 github.com/cemrsz/sakura-token-garden
+
+#YapayZeka #ClaudeCode #Codex #YanProje #YazılımGeliştirme
