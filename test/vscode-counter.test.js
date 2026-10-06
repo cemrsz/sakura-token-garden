@@ -82,3 +82,32 @@ test('çok kısa satırlar en az minTyped karakter ister', () => {
   doc.type('ab'); doc.enter();
   assert.equal(doc.lines, 1);
 });
+
+test('başka satırda yazılan harfler, Enter basılan satırı sayılır hale getirmez', () => {
+  const doc = new Doc('// TODO\n');
+  doc.insert([0, 7], ' a');
+  doc.insert([0, 9], 'b');
+  // İmleç alttaki satıra geçer, oraya yapıştırılır ve Enter'a basılır.
+  doc.insert(doc.end, 'yapistirilan(kod);');
+  doc.enter();
+  assert.equal(doc.lines, 0);
+});
+
+test('üstte satır eklenip silinince yazılan satırın kaydı onunla birlikte kayar', () => {
+  const doc = new Doc();
+  doc.type('ab');
+  doc.insert([0, 0], 'import x;\nimport y;\n'); // ör. ajan dosyanın başına iki satır ekler
+  assert.equal(doc.text, 'import x;\nimport y;\nab');
+  doc.insert([0, 0], '', [1, 0]); // ve birini siler
+  doc.enter();
+  assert.equal(doc.lines, 1);
+});
+
+test('satır başında basılan Enter satırı aşağı iter; satır yine de sayılabilir', () => {
+  const doc = new Doc();
+  doc.type('ab');
+  doc.insert([0, 0], '\n');
+  assert.equal(doc.lines, 0);
+  doc.enter();
+  assert.equal(doc.lines, 1);
+});
